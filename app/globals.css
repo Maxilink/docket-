@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-canvas text-ink font-sans antialiased; font-size: 15px; line-height: 1.5; }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { outline: 2px solid #49AB9B; outline-offset: 2px; }
+  input, select, textarea { font: inherit; }
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed; min-height: 44px; }
+  .btn-primary { @apply btn bg-primary text-white hover:bg-primary-700; }
+  .btn-accent { @apply btn bg-accent text-primary hover:brightness-95; }
+  .btn-ghost { @apply btn border border-line bg-white text-ink hover:border-muted; }
+  .btn-danger { @apply btn border border-hearing bg-white text-hearing hover:bg-hearing-soft; }
+  .card { @apply rounded-xl border border-line bg-white; }
+  .field { @apply flex flex-col gap-1.5 text-sm font-medium text-muted min-w-0; }
+  .input { @apply w-full rounded-lg border border-line bg-canvas px-3 text-[15px] font-normal text-ink focus:border-accent focus:bg-white focus:outline-none; min-height: 44px; }
+  .label-caps { @apply text-[11px] font-semibold uppercase tracking-[0.1em]; }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
