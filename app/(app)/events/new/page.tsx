@@ -5,7 +5,8 @@ import { ymd } from '@/lib/time';
 
 export const metadata = { title: 'New event' };
 
-export default async function NewEventPage({ searchParams }: { searchParams: { date?: string; matter?: string } }) {
+export default async function NewEventPage(props: { searchParams: Promise<{ date?: string; matter?: string }> }) {
+  const searchParams = await props.searchParams;
   const { supabase, profile } = await requireMember();
   const [staff, { data: matters }] = await Promise.all([
     getStaff(supabase),

@@ -8,7 +8,8 @@ import type { DiaryEvent } from '@/lib/types';
 
 export const metadata = { title: 'Edit event' };
 
-export default async function EditEventPage({ params }: { params: { id: string } }) {
+export default async function EditEventPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase } = await requireMember();
   const [{ data }, staff, { data: matters }] = await Promise.all([
     supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(),

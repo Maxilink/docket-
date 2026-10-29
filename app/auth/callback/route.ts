@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next');
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/today';
   if (code) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}${safeNext}`);
   }

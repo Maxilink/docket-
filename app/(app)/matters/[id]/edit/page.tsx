@@ -6,7 +6,8 @@ import type { Matter } from '@/lib/types';
 
 export const metadata = { title: 'Edit matter' };
 
-export default async function EditMatterPage({ params }: { params: { id: string } }) {
+export default async function EditMatterPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase } = await requireMember();
   const [{ data }, staff] = await Promise.all([supabase.from('matters').select('*').eq('id', params.id).maybeSingle(), getStaff(supabase)]);
   if (!data) notFound();

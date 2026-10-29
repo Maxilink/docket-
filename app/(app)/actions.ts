@@ -39,7 +39,7 @@ export async function saveMatter(formData: FormData): Promise<ActionResult> {
     description: str(formData, 'description'),
     status: str(formData, 'status') === 'closed' ? 'closed' : 'active',
   };
-  const supabase = createClient();
+  const supabase = await createClient();
   if (id) {
     const { error } = await supabase.from('matters').update(row).eq('id', id);
     if (error) return { error: friendly(error.message) };
@@ -53,7 +53,7 @@ export async function saveMatter(formData: FormData): Promise<ActionResult> {
 }
 
 export async function deleteMatter(id: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error, count } = await supabase.from('matters').delete({ count: 'exact' }).eq('id', id);
   if (error) return { error: friendly(error.message) };
   if (!count) return { error: 'Only partners and admins can delete a matter.' };
@@ -87,7 +87,7 @@ export async function saveEvent(formData: FormData): Promise<ActionResult> {
     remind_hour: formData.get('remind_hour') === 'on',
     remind_client: formData.get('remind_client') === 'on',
   };
-  const supabase = createClient();
+  const supabase = await createClient();
   if (id) {
     const { error } = await supabase.from('events').update(row).eq('id', id);
     if (error) return { error: friendly(error.message) };
@@ -100,7 +100,7 @@ export async function saveEvent(formData: FormData): Promise<ActionResult> {
 }
 
 export async function deleteEvent(id: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error, count } = await supabase.from('events').delete({ count: 'exact' }).eq('id', id);
   if (error) return { error: friendly(error.message) };
   if (!count) return { error: 'Only partners and admins can delete events.' };
@@ -124,7 +124,7 @@ export async function recordOutcome(formData: FormData): Promise<ActionResult & 
   }
   const purpose = str(formData, 'next_purpose');
   const note = str(formData, 'note');
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: newId, error } = await supabase.rpc('record_outcome', {
     p_event_id: eventId,
     p_outcome: outcome,
@@ -146,7 +146,7 @@ async function notifyClient(eventId: string, message: string): Promise<string> {
   const text = message.trim();
   if (!text) return 'No client message was sent because the message was empty.';
   if (!termiiConfigured()) return 'The outcome is saved, but the client message was not sent: Termii is not set up yet.';
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: ev } = await supabase.from('events').select('id, firm_id, matter:matters(client_phone)').eq('id', eventId).maybeSingle();
   const matter = (ev as unknown as { matter: { client_phone: string | null } | null } | null)?.matter;
   const to = normalisePhone(matter?.client_phone ?? null);
@@ -166,7 +166,7 @@ export async function remindClient(eventId: string, message: string): Promise<Ac
   const text = message.trim();
   if (!text) return { error: 'Write the message to send.' };
   if (text.length > 900) return { error: 'Keep the message under 900 characters.' };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: ev } = await supabase
     .from('events')
     .select('id, firm_id, starts_at, outcome, matter:matters(client_phone)')
@@ -197,7 +197,7 @@ export async function updateMyProfile(formData: FormData): Promise<ActionResult>
   const phone = phoneRaw ? normalisePhone(phoneRaw) : null;
   if (!fullName) return { error: 'Enter your name.' };
   if (phoneRaw && !phone) return { error: 'That phone number doesn\'t look right. Use a format like 0803 123 4567.' };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Please sign in again.' };
   const { error } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', user.id);
@@ -209,7 +209,7 @@ export async function updateMyProfile(formData: FormData): Promise<ActionResult>
 export async function changePassword(formData: FormData): Promise<ActionResult> {
   const pw = String(formData.get('password') ?? '');
   if (pw.length < 8) return { error: 'Use a password of at least 8 characters.' };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: pw });
   if (error) return { error: error.message };
   return {};
@@ -219,7 +219,7 @@ const ROLES: Role[] = ['admin', 'partner', 'associate', 'clerk'];
 
 export async function setRole(userId: string, role: Role): Promise<ActionResult> {
   if (!ROLES.includes(role)) return { error: 'Unknown role.' };
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
   if (error) return { error: friendly(error.message) };
   revalidatePath('/team');
@@ -227,7 +227,7 @@ export async function setRole(userId: string, role: Role): Promise<ActionResult>
 }
 
 export async function removeMember(userId: string): Promise<ActionResult> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.from('profiles').update({ firm_id: null }).eq('id', userId);
   if (error) return { error: friendly(error.message) };
   revalidatePath('/team');
@@ -235,7 +235,7 @@ export async function removeMember(userId: string): Promise<ActionResult> {
 }
 
 export async function regenerateJoinCode(): Promise<ActionResult & { code?: string }> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('regenerate_join_code');
   if (error) return { error: friendly(error.message) };
   revalidatePath('/team');

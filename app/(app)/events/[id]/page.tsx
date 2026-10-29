@@ -11,7 +11,8 @@ import type { DiaryEvent } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EventPage({ params }: { params: { id: string } }) {
+export default async function EventPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase, profile, firm } = await requireMember();
   const [{ data }, staff] = await Promise.all([supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(), getStaff(supabase)]);
   if (!data) notFound();

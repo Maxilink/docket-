@@ -7,7 +7,8 @@ import type { Matter } from '@/lib/types';
 export const metadata = { title: 'Matters' };
 export const dynamic = 'force-dynamic';
 
-export default async function MattersPage({ searchParams }: { searchParams: { q?: string; status?: string } }) {
+export default async function MattersPage(props: { searchParams: Promise<{ q?: string; status?: string }> }) {
+  const searchParams = await props.searchParams;
   const { supabase } = await requireMember();
   const status = searchParams.status === 'closed' ? 'closed' : 'active';
   const q = (searchParams.q ?? '').trim();

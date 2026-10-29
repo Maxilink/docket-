@@ -4,7 +4,8 @@ import MessagesView, { type Msg } from './MessagesView';
 export const metadata = { title: 'Messages' };
 export const dynamic = 'force-dynamic';
 
-export default async function MessagesPage({ searchParams }: { searchParams: { c?: string } }) {
+export default async function MessagesPage(props: { searchParams: Promise<{ c?: string }> }) {
+  const searchParams = await props.searchParams;
   const { supabase, profile, firm } = await requireMember();
   const [staff, { data: matters }, { data: recent, error }, { data: seen }] = await Promise.all([
     getStaff(supabase),

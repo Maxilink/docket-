@@ -11,7 +11,8 @@ import type { DiaryEvent, Matter } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MatterPage({ params }: { params: { id: string } }) {
+export default async function MatterPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase, profile, firm } = await requireMember();
   const [{ data }, staff, { data: evData }] = await Promise.all([
     supabase.from('matters').select('*').eq('id', params.id).maybeSingle(),

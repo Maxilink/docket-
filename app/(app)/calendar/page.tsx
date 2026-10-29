@@ -7,7 +7,8 @@ import CalendarView from './CalendarView';
 export const metadata = { title: 'Calendar' };
 export const dynamic = 'force-dynamic';
 
-export default async function CalendarPage({ searchParams }: { searchParams: { m?: string; d?: string } }) {
+export default async function CalendarPage(props: { searchParams: Promise<{ m?: string; d?: string }> }) {
+  const searchParams = await props.searchParams;
   const { supabase } = await requireMember();
   const now = new Date();
   const p = parts(now);

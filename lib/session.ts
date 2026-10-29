@@ -4,7 +4,7 @@ import type { Firm, Profile } from '@/lib/types';
 
 /** Signed-in user with a firm. Sends people to /login or /onboarding when that isn't true yet. */
 export async function requireMember() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -16,7 +16,7 @@ export async function requireMember() {
   return { supabase, user, profile: profile as Profile, firm: firm as Firm };
 }
 
-export async function getStaff(supabase: ReturnType<typeof createClient>) {
+export async function getStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data } = await supabase.from('profiles').select('id, firm_id, full_name, phone, role').order('full_name');
   return (data ?? []) as Profile[];
 }

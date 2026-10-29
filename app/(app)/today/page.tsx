@@ -7,7 +7,8 @@ import type { DiaryEvent } from '@/lib/types';
 export const metadata = { title: 'Today' };
 export const dynamic = 'force-dynamic';
 
-export default async function TodayPage({ searchParams }: { searchParams: { scope?: string } }) {
+export default async function TodayPage(props: { searchParams: Promise<{ scope?: string }> }) {
+  const searchParams = await props.searchParams;
   const { supabase, profile, firm } = await requireMember();
   const mine = searchParams.scope !== 'all';
   const staff = await getStaff(supabase);

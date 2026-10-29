@@ -6,7 +6,7 @@ import OnboardingForms from './OnboardingForms';
 export const metadata = { title: 'Get started' };
 
 export default async function OnboardingPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: profile } = await supabase.from('profiles').select('firm_id, full_name').eq('id', user.id).maybeSingle();

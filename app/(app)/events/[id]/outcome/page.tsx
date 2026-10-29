@@ -10,7 +10,8 @@ import OutcomeForm from './OutcomeForm';
 export const metadata = { title: 'Record outcome' };
 export const dynamic = 'force-dynamic';
 
-export default async function OutcomePage({ params }: { params: { id: string } }) {
+export default async function OutcomePage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { supabase, firm } = await requireMember();
   const [{ data }, staff] = await Promise.all([supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(), getStaff(supabase)]);
   if (!data) notFound();
