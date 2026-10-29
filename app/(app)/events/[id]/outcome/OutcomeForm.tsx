@@ -71,7 +71,7 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
     return (
       <section role="status" className="card flex max-w-2xl flex-col gap-3 border-accent p-6">
         <p className="label-caps text-accent-ink">Outcome saved</p>
-        <h2 className="font-display text-2xl font-normal">
+        <h2 className="font-display text-2xl font-bold tracking-tight">
           {needsDate && nextAt ? `${outcome === 'reserved' ? 'Reserved to' : 'Adjourned to'} ${fmtDateLong(nextAt)}` : OUTCOMES.find((o) => o.value === outcome)?.label}
         </h2>
         {done.notified && <p className="text-sm text-muted">{done.notified}</p>}
@@ -170,7 +170,7 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
       <aside aria-label="What happens when you save" className="flex min-w-0 flex-[1_1_300px] flex-col gap-4">
         <section className="rounded-xl bg-primary p-5 text-white">
           <p className="label-caps mb-2 text-accent">When you save</p>
-          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-[#DCE7EA]">
+          <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm text-[#E9E4F4]">
             {effects.map((x) => <li key={x}>{x}</li>)}
           </ul>
         </section>

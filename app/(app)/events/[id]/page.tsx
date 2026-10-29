@@ -4,13 +4,15 @@ import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
 import DeleteButton from '@/components/DeleteButton';
 import { canDelete, OUTCOME_LABEL } from '@/lib/constants';
+import RemindClient from '@/components/RemindClient';
+import { clientUpcomingText } from '@/lib/messages';
 import { fmtDateLong, fmtTime, startOfDay } from '@/lib/time';
 import type { DiaryEvent } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function EventPage({ params }: { params: { id: string } }) {
-  const { supabase, profile } = await requireMember();
+  const { supabase, profile, firm } = await requireMember();
   const [{ data }, staff] = await Promise.all([supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(), getStaff(supabase)]);
   if (!data) notFound();
   const e = data as unknown as DiaryEvent;
@@ -47,7 +49,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
           <TypeTag type={e.type} />
           <Pill tone={st.tone}>{st.label}</Pill>
         </div>
-        <h1 className="font-display text-3xl font-normal leading-tight">{e.title}</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">{e.title}</h1>
       </header>
 
       {canRecord && (
@@ -71,6 +73,21 @@ export default async function EventPage({ params }: { params: { id: string } }) 
               {nextEvent.purpose ? ` for ${nextEvent.purpose.toLowerCase()}` : ''}
             </p>
           )}
+        </section>
+      )}
+
+      {!past && !e.outcome && e.matter?.client_phone && (
+        <section className="card flex flex-col gap-3 p-5">
+          <div>
+            <h2 className="font-bold">Remind the client</h2>
+            <p className="text-sm text-muted">{e.matter.client_name || 'Client'} · +{e.matter.client_phone}{e.remind_client ? ' · An automatic reminder also goes out the day before.' : ''}</p>
+          </div>
+          <RemindClient
+            eventId={e.id}
+            clientName={e.matter.client_name}
+            clientPhone={e.matter.client_phone}
+            defaultText={clientUpcomingText(firm.name, e.matter.client_name, at, [e.court, e.courtroom].filter(Boolean).join(', '), e.purpose, e.matter.suit_number)}
+          />
         </section>
       )}
 

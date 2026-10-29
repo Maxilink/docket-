@@ -16,7 +16,7 @@ export default async function NewEventPage({ searchParams }: { searchParams: { d
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <Link href={searchParams.matter ? `/matters/${searchParams.matter}` : '/calendar'} className="text-sm text-muted hover:underline">← Back</Link>
-      <h1 className="font-display text-3xl font-normal">New event</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">New event</h1>
       <EventForm
         matters={matters ?? []}
         staff={staff}

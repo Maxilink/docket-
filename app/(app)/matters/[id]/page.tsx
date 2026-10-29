@@ -4,13 +4,15 @@ import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
 import DeleteButton from '@/components/DeleteButton';
 import { canDelete, EVENT_TYPES } from '@/lib/constants';
+import RemindClient from '@/components/RemindClient';
+import { clientUpcomingText } from '@/lib/messages';
 import { fmtDate, fmtDateLong, fmtTime, relDay } from '@/lib/time';
 import type { DiaryEvent, Matter } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MatterPage({ params }: { params: { id: string } }) {
-  const { supabase, profile } = await requireMember();
+  const { supabase, profile, firm } = await requireMember();
   const [{ data }, staff, { data: evData }] = await Promise.all([
     supabase.from('matters').select('*').eq('id', params.id).maybeSingle(),
     getStaff(supabase),
@@ -47,11 +49,12 @@ export default async function MatterPage({ params }: { params: { id: string } })
             {m.suit_number && <span className="rounded bg-primary-100 px-2 py-0.5 font-mono text-sm text-primary">{m.suit_number}</span>}
             <Pill tone={m.status === 'active' ? 'good' : 'neutral'}>{m.status === 'active' ? 'Active' : 'Closed'}</Pill>
           </div>
-          <h1 className="font-display text-3xl font-normal leading-tight sm:text-4xl">{m.title}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight leading-tight sm:text-4xl">{m.title}</h1>
           {m.description && <p className="whitespace-pre-wrap text-muted">{m.description}</p>}
           <div className="mt-1 flex flex-wrap gap-2">
             <Link href={`/events/new?matter=${m.id}`} className="btn-primary">+ Add date</Link>
             <Link href={`/matters/${m.id}/edit`} className="btn-ghost">Edit matter</Link>
+            <Link href={`/messages?c=m:${m.id}`} className="btn-ghost">Team discussion</Link>
             {canDelete(profile.role) && <DeleteButton kind="matter" id={m.id} after="/matters" label="Delete this matter and all its dates?" />}
           </div>
         </div>
@@ -60,26 +63,43 @@ export default async function MatterPage({ params }: { params: { id: string } })
             <>
               <span className="label-caps text-accent">Awaiting outcome</span>
               <span className="font-display text-2xl">{relDay(new Date(awaiting.starts_at), now) || fmtDate(new Date(awaiting.starts_at))}, {fmtTime(new Date(awaiting.starts_at))}</span>
-              <span className="text-sm text-[#C8D6DA]">{awaiting.purpose || EVENT_TYPES[awaiting.type].label}</span>
+              <span className="text-sm text-[#D9D2EA]">{awaiting.purpose || EVENT_TYPES[awaiting.type].label}</span>
               <Link href={`/events/${awaiting.id}/outcome`} className="btn-accent mt-2">Record outcome</Link>
             </>
           ) : next ? (
             <>
               <span className="label-caps text-accent">Next date</span>
               <span className="font-display text-2xl">{relDay(new Date(next.starts_at), now) || fmtDateLong(new Date(next.starts_at))}, {fmtTime(new Date(next.starts_at))}</span>
-              <span className="text-sm text-[#C8D6DA]">{[next.purpose, [next.court, next.courtroom].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</span>
+              <span className="text-sm text-[#D9D2EA]">{[next.purpose, [next.court, next.courtroom].filter(Boolean).join(', ')].filter(Boolean).join(' · ')}</span>
               <Link href={`/events/${next.id}`} className="btn-accent mt-2">Open</Link>
             </>
           ) : (
             <>
               <span className="label-caps text-accent">Next date</span>
               <span className="font-display text-2xl">None fixed</span>
-              <span className="text-sm text-[#C8D6DA]">{m.status === 'active' ? 'Add the next hearing so this file isn\'t forgotten.' : 'This matter is closed.'}</span>
+              <span className="text-sm text-[#D9D2EA]">{m.status === 'active' ? 'Add the next hearing so this file isn\'t forgotten.' : 'This matter is closed.'}</span>
               {m.status === 'active' && <Link href={`/events/new?matter=${m.id}`} className="btn-accent mt-2">Add next date</Link>}
             </>
           )}
         </div>
       </header>
+
+      {next && m.client_phone && (next.type === 'hearing' || next.type === 'client') && (
+        <section className="card flex flex-col gap-3 p-5">
+          <div>
+            <h2 className="font-bold">Remind the client</h2>
+            <p className="text-sm text-muted">
+              {m.client_name || 'Client'} · +{m.client_phone} · Next date {fmtDateLong(new Date(next.starts_at))}, {fmtTime(new Date(next.starts_at))}
+            </p>
+          </div>
+          <RemindClient
+            eventId={next.id}
+            clientName={m.client_name}
+            clientPhone={m.client_phone}
+            defaultText={clientUpcomingText(firm.name, m.client_name, new Date(next.starts_at), [next.court, next.courtroom].filter(Boolean).join(', '), next.purpose, m.suit_number)}
+          />
+        </section>
+      )}
 
       <section aria-label="Case details" className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
         {facts.map(([k, v]) => (
@@ -92,7 +112,7 @@ export default async function MatterPage({ params }: { params: { id: string } })
 
       <section className="card">
         <div className="border-b border-line px-5 py-4">
-          <h2 className="font-display text-xl font-normal">Proceedings</h2>
+          <h2 className="font-display text-xl font-bold tracking-tight">Proceedings</h2>
         </div>
         {events.length === 0 ? (
           <div className="px-5 py-8 text-sm text-muted">

@@ -53,7 +53,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href={`/calendar?m=${prev}`} aria-label="Previous month" className="btn-ghost w-11 px-0">‹</Link>
-          <h1 className="min-w-[200px] text-center font-display text-3xl font-normal">{MONTHS[month]} {year}</h1>
+          <h1 className="min-w-[200px] text-center font-display text-3xl font-bold tracking-tight">{MONTHS[month]} {year}</h1>
           <Link href={`/calendar?m=${next}`} aria-label="Next month" className="btn-ghost w-11 px-0">›</Link>
           <Link href="/calendar" className="btn-ghost">Today</Link>
         </div>
@@ -132,7 +132,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
         <aside aria-label="Selected day" className="card min-w-0 flex-[1_1_300px]">
           <div className="border-b border-line px-5 py-4">
             <p className="label-caps text-accent-ink">{selected === today ? 'Today' : selected < today ? 'Past day' : 'Upcoming'}</p>
-            <h2 className="font-display text-xl font-normal">{fmtDateLong(selDate)}</h2>
+            <h2 className="font-display text-xl font-bold tracking-tight">{fmtDateLong(selDate)}</h2>
           </div>
           {selList.length === 0 ? (
             <div className="px-5 py-6 text-sm text-muted">

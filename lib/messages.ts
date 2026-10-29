@@ -32,3 +32,11 @@ export function clientReminderText(firmName: string, at: Date, where: string, su
   const when = relDay(at) === 'Today' ? 'today' : 'tomorrow';
   return `Reminder: your case${suit ? ` (${suit})` : ''} is in court ${when}, ${fmtDateLong(at)} at ${fmtTime(at)}${where ? `, ${where}` : ''}. ${firmName}.`;
 }
+
+/** Message for "Remind client" sent by a lawyer before a hearing. Editable before sending. */
+export function clientUpcomingText(firmName: string, clientName: string | null, at: Date, where: string, purpose: string | null, suit: string | null) {
+  const greet = clientName ? `Good day ${clientName}.` : 'Good day.';
+  const when = relDay(at);
+  const day = when === 'Today' || when === 'Tomorrow' ? `${when.toLowerCase()}, ${fmtDateLong(at)}` : fmtDateLong(at);
+  return `${greet} A reminder that your case${suit ? ` (${suit})` : ''} is coming up ${day} at ${fmtTime(at)}${where ? `, ${where}` : ''}${purpose ? `, for ${purpose.toLowerCase()}` : ''}. Please be available. ${firmName}.`;
+}

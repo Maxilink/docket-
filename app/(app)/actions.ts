@@ -154,14 +154,40 @@ async function notifyClient(eventId: string, message: string): Promise<string> {
   const res = await sendMessage(to, text);
   try {
     const admin = createAdminClient();
-    await admin.from('reminder_log').upsert(
-      { firm_id: ev.firm_id, event_id: ev.id, kind: 'client_update', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail },
-      { onConflict: 'event_id,kind,recipient' },
-    );
+    await admin.from('reminder_log').insert({ firm_id: ev.firm_id, event_id: ev.id, kind: 'client_update', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail });
   } catch {
     // Logging is best-effort.
   }
   return res.ok ? 'The client update was sent.' : 'The outcome is saved, but the client message failed to send. Check your Termii balance and sender ID.';
+}
+
+// ---------- Remind client now ----------
+export async function remindClient(eventId: string, message: string): Promise<ActionResult & { at?: string }> {
+  const text = message.trim();
+  if (!text) return { error: 'Write the message to send.' };
+  if (text.length > 900) return { error: 'Keep the message under 900 characters.' };
+  const supabase = createClient();
+  const { data: ev } = await supabase
+    .from('events')
+    .select('id, firm_id, starts_at, outcome, matter:matters(client_phone)')
+    .eq('id', eventId)
+    .maybeSingle();
+  if (!ev) return { error: 'Event not found.' };
+  const e = ev as unknown as { id: string; firm_id: string; starts_at: string; outcome: string | null; matter: { client_phone: string | null } | null };
+  if (new Date(e.starts_at).getTime() < Date.now() - 3600e3) return { error: 'This hearing has passed, so there is nothing to remind the client about.' };
+  const to = normalisePhone(e.matter?.client_phone ?? null);
+  if (!to) return { error: 'This case has no client phone number. Add one on the matter first.' };
+  if (!termiiConfigured()) return { error: 'SMS and WhatsApp aren\'t set up yet. Add the Termii keys in Vercel.' };
+  const res = await sendMessage(to, text);
+  try {
+    const admin = createAdminClient();
+    await admin.from('reminder_log').insert({ firm_id: e.firm_id, event_id: e.id, kind: 'client_manual', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail });
+  } catch {
+    // Logging is best-effort.
+  }
+  if (!res.ok) return { error: 'The message didn\'t send. Check your Termii balance and sender ID, then try again.' };
+  revalidatePath('/today');
+  return { at: new Date().toISOString() };
 }
 
 // ---------- People ----------

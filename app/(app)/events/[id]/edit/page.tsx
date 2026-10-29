@@ -22,7 +22,7 @@ export default async function EditEventPage({ params }: { params: { id: string }
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <Link href={`/events/${e.id}`} className="text-sm text-muted hover:underline">← {e.title}</Link>
-      <h1 className="font-display text-3xl font-normal">Edit event</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">Edit event</h1>
       <EventForm event={e} matters={matters ?? []} staff={staff} minDate={ymd(new Date())} defaults={{ date: ymd(at), time: hm(at), lawyerId: e.lawyer_id ?? '' }} />
     </div>
   );

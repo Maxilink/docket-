@@ -31,7 +31,7 @@ export default async function MattersPage({ searchParams }: { searchParams: { q?
   return (
     <>
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-display text-3xl font-normal">Matters</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">Matters</h1>
         <Link href="/matters/new" className="btn-primary">+ New matter</Link>
       </header>
       <form className="flex flex-wrap items-center gap-3" role="search">

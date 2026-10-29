@@ -27,7 +27,7 @@ export default function AccountForms({ name, phone }: { name: string; phone: str
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <form onSubmit={handle('profile')} className="card flex flex-col gap-4 p-6">
-        <h2 className="font-display text-xl font-normal">Your details</h2>
+        <h2 className="font-display text-xl font-bold tracking-tight">Your details</h2>
         <label className="field" htmlFor="full_name">Name
           <input id="full_name" name="full_name" className="input" defaultValue={name} required />
         </label>
@@ -39,7 +39,7 @@ export default function AccountForms({ name, phone }: { name: string; phone: str
         <button className="btn-primary self-start" disabled={pending}>Save</button>
       </form>
       <form onSubmit={handle('password')} className="card flex flex-col gap-4 p-6">
-        <h2 className="font-display text-xl font-normal">Change password</h2>
+        <h2 className="font-display text-xl font-bold tracking-tight">Change password</h2>
         <label className="field" htmlFor="password">New password
           <input id="password" name="password" type="password" className="input" minLength={8} autoComplete="new-password" required />
         </label>

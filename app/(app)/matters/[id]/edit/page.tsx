@@ -14,7 +14,7 @@ export default async function EditMatterPage({ params }: { params: { id: string 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       <Link href={`/matters/${matter.id}`} className="text-sm text-muted hover:underline">← {matter.title}</Link>
-      <h1 className="font-display text-3xl font-normal">Edit matter</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">Edit matter</h1>
       <MatterForm matter={matter} staff={staff} />
     </div>
   );

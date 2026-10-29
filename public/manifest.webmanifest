@@ -1,10 +1,10 @@
 {
-  "name": "Docket",
-  "short_name": "Docket",
+  "name": "C-Diary",
+  "short_name": "C-Diary",
   "description": "Court diary and case tracker for law firms.",
   "start_url": "/today",
   "display": "standalone",
-  "background_color": "#F4F7F7",
-  "theme_color": "#0B2632",
+  "background_color": "#F7F6FA",
+  "theme_color": "#2E1A5C",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }

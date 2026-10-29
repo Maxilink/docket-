@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { EVENT_TYPES, OUTCOME_LABEL } from '@/lib/constants';
 import { fmtDate, fmtTime, relDay, parts, MONTHS } from '@/lib/time';
 import type { DiaryEvent, Profile } from '@/lib/types';
+import RemindClient from '@/components/RemindClient';
+import { clientUpcomingText } from '@/lib/messages';
 
 export function TypeTag({ type }: { type: DiaryEvent['type'] }) {
   return <span className={`label-caps ${EVENT_TYPES[type].text}`}>{EVENT_TYPES[type].label}</span>;
@@ -25,13 +27,14 @@ export function eventStatus(e: DiaryEvent, now = new Date()) {
   return { label: 'Upcoming', tone: 'neutral' as const };
 }
 
-export function EventRow({ e, staff, showDate = false, now = new Date() }: { e: DiaryEvent; staff: Profile[]; showDate?: boolean; now?: Date }) {
+export function EventRow({ e, staff, showDate = false, now = new Date(), firmName }: { e: DiaryEvent; staff: Profile[]; showDate?: boolean; now?: Date; firmName?: string }) {
   const d = new Date(e.starts_at);
   const p = parts(d);
   const lawyer = staff.find((s) => s.id === e.lawyer_id)?.full_name;
   const st = eventStatus(e, now);
   const needsOutcome = st.label === 'Awaiting outcome';
   const rel = relDay(d, now);
+  const canRemind = Boolean(firmName && !e.outcome && d > now && e.matter?.client_phone && (e.type === 'hearing' || e.type === 'client'));
   return (
     <li className={`grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-line/70 px-5 py-4 last:border-b-0 sm:grid-cols-[72px_minmax(0,1fr)_auto]`}>
       <div className="tabular flex flex-col">
@@ -68,6 +71,17 @@ export function EventRow({ e, staff, showDate = false, now = new Date() }: { e: 
           </Link>
         )}
       </div>
+      {canRemind && (
+        <div className="col-span-2 sm:col-span-3 sm:pl-[88px]">
+          <RemindClient
+            compact
+            eventId={e.id}
+            clientName={e.matter?.client_name ?? null}
+            clientPhone={e.matter!.client_phone!}
+            defaultText={clientUpcomingText(firmName!, e.matter?.client_name ?? null, d, [e.court, e.courtroom].filter(Boolean).join(', '), e.purpose, e.matter?.suit_number ?? null)}
+          />
+        </div>
+      )}
     </li>
   );
 }
@@ -85,7 +99,7 @@ export function SectionCard({ title, aside, children }: { title: string; aside?:
   return (
     <section className="card min-w-0">
       <div className="flex items-baseline justify-between gap-3 border-b border-line px-5 py-4">
-        <h2 className="font-display text-xl font-normal">{title}</h2>
+        <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>
         {aside && <div className="text-sm text-muted">{aside}</div>}
       </div>
       {children}

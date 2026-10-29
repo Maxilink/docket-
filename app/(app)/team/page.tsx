@@ -13,12 +13,12 @@ export default async function TeamPage() {
   return (
     <>
       <header>
-        <h1 className="font-display text-3xl font-normal">Team</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">Team</h1>
         <p className="text-muted">{firm.name} · {staff.length} {staff.length === 1 ? 'person' : 'people'}</p>
       </header>
 
       <section className="card flex flex-col gap-3 p-5">
-        <h2 className="font-display text-xl font-normal">Invite colleagues</h2>
+        <h2 className="font-display text-xl font-bold tracking-tight">Invite colleagues</h2>
         <p className="text-sm text-muted">Colleagues create an account, choose <strong className="text-ink">Join your firm</strong> and enter this code. They join as Associates{isAdmin ? '; change their role below' : ''}.</p>
         <JoinCode code={firm.join_code} isAdmin={isAdmin} />
       </section>
@@ -42,7 +42,7 @@ export default async function TeamPage() {
       </section>
 
       <section className="card p-5">
-        <h2 className="mb-2 font-display text-xl font-normal">What each role can do</h2>
+        <h2 className="mb-2 font-display text-xl font-bold tracking-tight">What each role can do</h2>
         <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[120px_minmax(0,1fr)]">
           {ROLES.map((r) => (
             <div key={r.value} className="contents">

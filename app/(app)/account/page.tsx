@@ -8,7 +8,7 @@ export default async function AccountPage() {
   return (
     <>
       <header>
-        <h1 className="font-display text-3xl font-normal">My account</h1>
+        <h1 className="font-display text-3xl font-bold tracking-tight">My account</h1>
         <p className="text-muted">{user.email}</p>
       </header>
       <AccountForms name={profile.full_name} phone={profile.phone} />

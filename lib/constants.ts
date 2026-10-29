@@ -1,6 +1,6 @@
 import type { EventType, Outcome, Role } from './types';
 
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Docket';
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'C-Diary';
 
 export const EVENT_TYPES: Record<EventType, { label: string; text: string; bg: string; border: string; dot: string }> = {
   hearing: { label: 'Court hearing', text: 'text-hearing', bg: 'bg-hearing-soft', border: 'border-hearing', dot: 'bg-hearing' },

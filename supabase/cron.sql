@@ -1,4 +1,4 @@
--- Docket: run the reminder check every 5 minutes.
+-- C-Diary: run the reminder check every 5 minutes.
 -- Run this AFTER the app is live on Vercel.
 -- 1. Replace YOUR-APP-URL with your Vercel address (for example https://docket-abc.vercel.app).
 -- 2. Replace YOUR_CRON_SECRET with the same CRON_SECRET you set in Vercel.

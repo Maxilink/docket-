@@ -8,7 +8,7 @@ export const metadata = { title: 'Today' };
 export const dynamic = 'force-dynamic';
 
 export default async function TodayPage({ searchParams }: { searchParams: { scope?: string } }) {
-  const { supabase, profile } = await requireMember();
+  const { supabase, profile, firm } = await requireMember();
   const mine = searchParams.scope !== 'all';
   const staff = await getStaff(supabase);
   const now = new Date();
@@ -64,14 +64,14 @@ export default async function TodayPage({ searchParams }: { searchParams: { scop
     { n: noNext.length, label: 'Active matters with no next date' },
   ];
 
-  const kindLabel: Record<string, string> = { day: 'Day-before reminder', hour: 'Hour-before reminder', client_day: 'Client reminder', client_update: 'Client update' };
+  const kindLabel: Record<string, string> = { day: 'Day-before reminder', hour: 'Hour-before reminder', client_day: 'Client reminder', client_update: 'Client update', client_manual: 'Client reminder' };
 
   return (
     <>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm text-muted">{fmtDateLong(now)}</p>
-          <h1 className="font-display text-3xl font-normal">Good {greeting(now)}, {firstName(profile.full_name)}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Good {greeting(now)}, {firstName(profile.full_name)}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div role="group" aria-label="Whose diary" className="flex overflow-hidden rounded-lg border border-line bg-white">
@@ -107,7 +107,7 @@ export default async function TodayPage({ searchParams }: { searchParams: { scop
         <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-6">
           <SectionCard title="Today's cause list" aside={`${today.length} ${today.length === 1 ? 'item' : 'items'}`}>
             {today.length ? (
-              <ul>{today.map((e) => <EventRow key={e.id} e={e} staff={staff} now={now} />)}</ul>
+              <ul>{today.map((e) => <EventRow key={e.id} e={e} staff={staff} now={now} firmName={firm.name} />)}</ul>
             ) : (
               <Empty title="Nothing in the diary today">
                 <p>{mine ? 'Switch to Whole firm to see colleagues\' matters, or ' : ''}<Link href="/events/new" className="text-primary underline">add an event</Link>.</p>

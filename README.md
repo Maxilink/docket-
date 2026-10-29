@@ -1,10 +1,10 @@
-# Docket
+# C-Diary
 
 Court diary and case tracker for law firms: hearings, adjournments, filing deadlines, case files, and SMS/WhatsApp reminders.
 
 **Stack:** Next.js 14 (React, TypeScript) · Tailwind CSS · Supabase (database, logins) · Termii (SMS/WhatsApp) · Vercel (hosting)
 
-**Brand colours:** primary `#0B2632`, accent `#49AB9B`. The accent is used for fills and highlights. A darker `#2D7A6E` is used where it appears as small text, so it stays readable on white.
+**Brand colours:** primary deep purple `#2E1A5C`, accent teal `#49AB9B`. The accent is used for fills and highlights. A darker `#2D7A6E` is used where it appears as small text, so it stays readable on white. Typeface: Plus Jakarta Sans.
 
 ---
 
@@ -22,6 +22,8 @@ Court diary and case tracker for law firms: hearings, adjournments, filing deadl
   - SMS/WhatsApp to counsel 1 day and 1 hour before
   - optionally to the client the day before
   - an in-app alarm sound while the app is open
+- **Messages:** private chat for counsel and staff, with a firm-wide General channel, a discussion for each matter, and direct messages between two people. New messages appear live, and the sidebar shows an unread count.
+- **Remind client:** from Today, a case file or an event, send the client an SMS/WhatsApp reminder that their matter is coming up. The message is pre-written and can be edited before sending.
 - **Installable on phones:** open the site and choose "Add to Home Screen".
 
 All times are Nigerian time (WAT).
@@ -34,6 +36,7 @@ All times are Nigerian time (WAT).
 
 1. Open your Supabase project and go to **SQL Editor** > **New query**.
 2. Paste the whole of `supabase/schema.sql` and click **Run**. You should see "Success".
+   Then open a new query, paste `supabase/002_messages_and_reminders.sql` and click **Run**. This adds Messages and Remind client.
 3. Go to **Project Settings** > **API** and copy three values:
    - Project URL
    - `anon` `public` key
@@ -61,7 +64,7 @@ All times are Nigerian time (WAT).
    | `TERMII_BASE_URL` | `https://v4.api.termii.com` |
    | `TERMII_SENDER_ID` | Your approved Sender ID |
    | `TERMII_CHANNEL` | `dnd` (ask Termii to activate the DND route), or `generic` while you wait |
-   | `NEXT_PUBLIC_APP_NAME` | `Docket`, or your product name |
+   | `NEXT_PUBLIC_APP_NAME` | `C-Diary` |
 
 4. Click **Deploy**, then copy your site address.
 5. Go back to Supabase step 4 and enter that address.
@@ -118,3 +121,11 @@ npm run dev                  # http://localhost:3000
 - `SUPABASE_SERVICE_ROLE_KEY`, `TERMII_API_KEY` and `CRON_SECRET` are secrets. Keep them only in Vercel's environment variables. Never put them in code, chat or email.
 - Row-level security in the database makes sure every query only ever sees the signed-in user's own firm.
 - Client data is stored with Supabase and Vercel, which are outside Nigeria. Before you onboard paying firms, have a lawyer confirm your setup and privacy policy meet the Nigeria Data Protection Act 2023.
+
+---
+
+## Updating an existing install to this version
+
+1. In Supabase, open **SQL Editor > New query**, paste `supabase/002_messages_and_reminders.sql` and click **Run**.
+2. In Vercel, open the project and go to **Settings > Environment Variables**. Change `NEXT_PUBLIC_APP_NAME` to `C-Diary`.
+3. Upload the changed files to GitHub. Vercel redeploys automatically. Changing an environment variable alone needs a redeploy: **Deployments > ⋯ > Redeploy**.
