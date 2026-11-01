@@ -6,7 +6,7 @@
   html { -webkit-text-size-adjust: 100%; }
   body { @apply bg-canvas text-ink font-sans antialiased; font-size: 15px; line-height: 1.5; }
   h1, h2, h3 { text-wrap: balance; }
-  :focus-visible { outline: 2px solid #49AB9B; outline-offset: 2px; }
+  :focus-visible { outline: 2px solid #0A7178; outline-offset: 2px; }
   input, select, textarea { font: inherit; }
 }
 
@@ -19,7 +19,7 @@
   .btn-danger { @apply btn border border-hearing bg-white text-hearing hover:bg-hearing-soft; }
   .card { @apply rounded-2xl border border-line bg-white; }
   .field { @apply flex flex-col gap-1.5 text-sm font-medium text-muted min-w-0; }
-  .input { @apply w-full rounded-xl border border-line bg-canvas px-3 text-[15px] font-normal text-ink focus:border-accent focus:bg-white focus:outline-none; min-height: 44px; }
+  .input { @apply w-full rounded-xl border border-line bg-canvas px-3 text-[15px] font-normal text-ink focus:border-accent-ink focus:bg-white focus:outline-none; min-height: 44px; }
   .label-caps { @apply text-[11px] font-semibold uppercase tracking-[0.1em]; }
   .tabular { font-variant-numeric: tabular-nums; }
 }

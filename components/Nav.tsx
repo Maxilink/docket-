@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { signOut } from '@/app/login/actions';
+import { forgetDevice } from '@/components/SignOutButton';
+import Logo from '@/components/Logo';
 
 const LINKS = [
   { href: '/today', label: 'Today', icon: 'M3 10.5 12 4l9 6.5V20H3z' },
@@ -12,7 +14,7 @@ const LINKS = [
   { href: '/team', label: 'Team', icon: 'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6' },
 ];
 
-export default function Nav({ appName, firmName, userName, roleLabel, unread }: { appName: string; firmName: string; userName: string; roleLabel: string; unread: number }) {
+export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0 }: { appName?: string; firmName: string; userName: string; roleLabel: string; unread: number; waiting?: number }) {
   const path = usePathname();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -20,19 +22,14 @@ export default function Nav({ appName, firmName, userName, roleLabel, unread }: 
 
   return (
     <nav aria-label="Main" className="flex w-full flex-col gap-4 border-b border-line bg-white px-4 py-4 md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:gap-7 md:border-b-0 md:border-r md:py-6">
-      <Link href="/today" className="flex items-center gap-3 px-2">
-        <span className="grid h-9 w-9 place-items-center rounded-[10px] bg-primary">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#49AB9B" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4" /></svg>
-        </span>
-        <span className="flex flex-col leading-tight">
-          <span className="text-lg font-extrabold tracking-tight text-primary">{appName}</span>
-          <span className="text-xs text-muted">{firmName}</span>
-        </span>
+      <Link href="/today" className="flex items-center gap-3 px-2" aria-label="C-Diary, Today">
+        <Logo firmName={firmName} />
       </Link>
       <div className="flex gap-1 overflow-x-auto md:flex-col">
         {LINKS.map((l) => {
           const on = path === l.href || path.startsWith(l.href + '/');
-          const badge = l.href === '/messages' && unread > 0 && !on;
+          const count = l.href === '/messages' ? unread : l.href === '/team' ? waiting : 0;
+          const badge = count > 0 && !on;
           return (
             <Link
               key={l.href}
@@ -40,11 +37,11 @@ export default function Nav({ appName, firmName, userName, roleLabel, unread }: 
               aria-current={on ? 'page' : undefined}
               className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] ${on ? 'bg-accent-soft font-semibold text-primary' : 'font-medium text-muted hover:bg-canvas hover:text-primary'}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={on ? '#2D7A6E' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={l.icon} /></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={on ? '#0A7178' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={l.icon} /></svg>
               {l.label}
               {badge && (
-                <span className="ml-auto grid h-[22px] min-w-[22px] place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-primary" aria-label={`${unread} unread`}>
-                  {unread > 99 ? '99+' : unread}
+                <span className="ml-auto grid h-[22px] min-w-[22px] place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-primary" aria-label={l.href === '/team' ? `${count} waiting for approval` : `${count} unread`}>
+                  {count > 99 ? '99+' : count}
                 </span>
               )}
             </Link>
@@ -62,7 +59,7 @@ export default function Nav({ appName, firmName, userName, roleLabel, unread }: 
           type="button"
           aria-label="Sign out"
           disabled={pending}
-          onClick={() => start(async () => { await signOut(); router.replace('/login'); router.refresh(); })}
+          onClick={() => start(async () => { await forgetDevice(); await signOut(); router.replace('/login'); router.refresh(); })}
           className="ml-auto grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-canvas hover:text-primary"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11" /></svg>

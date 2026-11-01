@@ -9,15 +9,17 @@ export async function requireMember() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: profile } = await supabase.from('profiles').select('id, firm_id, full_name, phone, role').eq('id', user.id).maybeSingle();
-  if (!profile || !profile.firm_id) redirect('/onboarding');
+  const { data: profile } = await supabase.from('profiles').select('id, firm_id, full_name, phone, role, status').eq('id', user.id).maybeSingle();
+  // People waiting for approval stay on the onboarding page until an admin lets them in.
+  if (!profile || !profile.firm_id || profile.status === 'pending') redirect('/onboarding');
   const { data: firm } = await supabase.from('firms').select('id, name, join_code').eq('id', profile.firm_id).maybeSingle();
   if (!firm) redirect('/onboarding');
   return { supabase, user, profile: profile as Profile, firm: firm as Firm };
 }
 
 export async function getStaff(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const { data } = await supabase.from('profiles').select('id, firm_id, full_name, phone, role').order('full_name');
+  // Approved colleagues only. (Admins can also see people waiting to join; the Team page lists those separately.)
+  const { data } = await supabase.from('profiles').select('id, firm_id, full_name, phone, role, status').eq('status', 'active').order('full_name');
   return (data ?? []) as Profile[];
 }
 

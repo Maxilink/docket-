@@ -13,11 +13,20 @@ export async function createFirm(formData: FormData): Promise<ActionResult> {
   return {};
 }
 
-export async function joinFirm(formData: FormData): Promise<ActionResult> {
+/** Sends a request to join. The firm admin approves it on the Team page. */
+export async function joinFirm(formData: FormData): Promise<ActionResult & { pending?: boolean }> {
   const code = String(formData.get('code') || '').trim();
   if (!code) return { error: 'Enter the join code your firm admin gave you.' };
   const supabase = await createClient();
-  const { error } = await supabase.rpc('join_firm', { code });
+  const { data, error } = await supabase.rpc('join_firm', { code });
+  if (error) return { error: clean(error.message) };
+  if (!data) return { error: 'That join code is not valid. Check it with your firm admin.' };
+  return { pending: true };
+}
+
+export async function cancelJoinRequest(): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('cancel_join_request');
   if (error) return { error: clean(error.message) };
   return {};
 }

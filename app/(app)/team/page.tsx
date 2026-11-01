@@ -1,7 +1,10 @@
+import Link from 'next/link';
 import { requireMember, getStaff } from '@/lib/session';
-import { ROLES } from '@/lib/constants';
+import { ROLES, canArchive } from '@/lib/constants';
 import { Pill } from '@/components/EventBits';
-import { JoinCode, MemberControls } from './TeamControls';
+import { fmtDate, fmtTime } from '@/lib/time';
+import type { Profile } from '@/lib/types';
+import { JoinCode, MemberControls, ApprovalControls } from './TeamControls';
 
 export const metadata = { title: 'Team' };
 export const dynamic = 'force-dynamic';
@@ -10,16 +13,60 @@ export default async function TeamPage() {
   const { supabase, profile, firm } = await requireMember();
   const staff = await getStaff(supabase);
   const isAdmin = profile.role === 'admin';
+  let waiting: Profile[] = [];
+  if (isAdmin) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, firm_id, full_name, phone, role, status, requested_at')
+      .eq('status', 'pending')
+      .order('requested_at');
+    waiting = (data ?? []) as Profile[];
+  }
   return (
     <>
-      <header>
-        <h1 className="font-display text-3xl font-bold tracking-tight">Team</h1>
-        <p className="text-muted">{firm.name} · {staff.length} {staff.length === 1 ? 'person' : 'people'}</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold tracking-tight">Team</h1>
+          <p className="text-muted">{firm.name} · {staff.length} {staff.length === 1 ? 'person' : 'people'}</p>
+        </div>
+        {canArchive(profile.role) && (
+          <div className="flex flex-wrap gap-2">
+            <Link href="/activity" className="btn-ghost">Activity log</Link>
+            <Link href="/archive" className="btn-ghost">Archive</Link>
+          </div>
+        )}
       </header>
+
+      {isAdmin && waiting.length > 0 && (
+        <section className="card overflow-hidden border-accent-ink/40">
+          <div className="border-b border-line bg-accent-soft/60 px-5 py-4">
+            <h2 className="font-display text-xl font-bold tracking-tight">Waiting for approval</h2>
+            <p className="text-sm text-muted">These people used your join code. They can&apos;t see anything until you approve them.</p>
+          </div>
+          <ul className="divide-y divide-line/70">
+            {waiting.map((w) => (
+              <li key={w.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                <div className="min-w-0">
+                  <p className="font-semibold">{w.full_name || 'Unnamed'}</p>
+                  <p className="text-sm text-muted">
+                    {w.phone ? `+${w.phone}` : 'No phone'}
+                    {w.requested_at ? ` · Asked ${fmtDate(new Date(w.requested_at))}, ${fmtTime(new Date(w.requested_at))}` : ''}
+                  </p>
+                </div>
+                <ApprovalControls id={w.id} name={w.full_name} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card flex flex-col gap-3 p-5">
         <h2 className="font-display text-xl font-bold tracking-tight">Invite colleagues</h2>
-        <p className="text-sm text-muted">Colleagues create an account, choose <strong className="text-ink">Join your firm</strong> and enter this code. They join as Associates{isAdmin ? '; change their role below' : ''}.</p>
+        <p className="text-sm text-muted">
+          Colleagues create an account, choose <strong className="text-ink">Join your firm</strong> and enter this code.
+          {isAdmin ? ' You then approve them here and choose their role.' : ' Your firm admin then approves them.'}
+          {' '}The code changes automatically whenever someone is removed.
+        </p>
         <JoinCode code={firm.join_code} isAdmin={isAdmin} />
       </section>
 

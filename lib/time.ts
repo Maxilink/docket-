@@ -66,6 +66,14 @@ export function relDay(d: Date, now = new Date()) {
   return '';
 }
 
+/** Automatic texts and notifications are held between 8pm and 7am Nigerian time. */
+export const QUIET_FROM_HOUR = 20;
+export const QUIET_UNTIL_HOUR = 7;
+export function isQuietHours(now = new Date()) {
+  const h = parts(now).h;
+  return h >= QUIET_FROM_HOUR || h < QUIET_UNTIL_HOUR;
+}
+
 export function daysUntil(d: Date, now = new Date()) {
   return Math.round((startOfDay(d).getTime() - startOfDay(now).getTime()) / 86400000);
 }

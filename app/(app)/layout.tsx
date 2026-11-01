@@ -1,5 +1,6 @@
 import Nav from '@/components/Nav';
 import AlarmWatcher from '@/components/AlarmWatcher';
+import AppServiceWorker from '@/components/AppServiceWorker';
 import { requireMember } from '@/lib/session';
 import { APP_NAME, ROLES } from '@/lib/constants';
 
@@ -19,10 +20,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     unread = count ?? 0;
   }
 
+  // People waiting for the admin to approve them.
+  let waiting = 0;
+  if (profile.role === 'admin') {
+    const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+    waiting = count ?? 0;
+  }
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
-      <Nav appName={APP_NAME} firmName={firm.name} userName={profile.full_name} roleLabel={roleLabel} unread={unread} />
+      <Nav appName={APP_NAME} firmName={firm.name} userName={profile.full_name} roleLabel={roleLabel} unread={unread} waiting={waiting} />
       <div className="flex min-w-0 flex-1 flex-col">
+        <AppServiceWorker />
         <AlarmWatcher userId={profile.id} />
         <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 sm:px-8 sm:py-8">{children}</main>
       </div>

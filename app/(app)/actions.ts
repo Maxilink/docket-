@@ -5,6 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { fromInputs } from '@/lib/time';
 import { normalisePhone } from '@/lib/phone';
 import { sendMessage, termiiConfigured } from '@/lib/termii';
+import { pushConfigured, sendPushToUser } from '@/lib/push';
+import { canTextClients } from '@/lib/constants';
 import type { ActionResult, EventType, Outcome, Role } from '@/lib/types';
 
 const str = (fd: FormData, k: string) => {
@@ -17,6 +19,18 @@ const friendly = (m: string) => {
   if (/row-level security/i.test(c)) return 'You don\'t have permission to do that. Ask your firm admin.';
   return c;
 };
+
+/** The signed-in person's id and role (approved members only). */
+async function me() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { supabase, user: null, role: null as Role | null };
+  const { data } = await supabase.from('profiles').select('role, status').eq('id', user.id).maybeSingle();
+  const role = data && data.status === 'active' ? (data.role as Role) : null;
+  return { supabase, user, role };
+}
+
+const MANUAL_TEXTS_PER_DAY = 3;
 
 // ---------- Matters ----------
 export async function saveMatter(formData: FormData): Promise<ActionResult> {
@@ -52,12 +66,38 @@ export async function saveMatter(formData: FormData): Promise<ActionResult> {
   return { id: data?.id as string };
 }
 
-export async function deleteMatter(id: string): Promise<ActionResult> {
+// ---------- Archive (instead of delete) ----------
+export async function archiveMatter(id: string): Promise<ActionResult> {
   const supabase = await createClient();
-  const { error, count } = await supabase.from('matters').delete({ count: 'exact' }).eq('id', id);
+  const { error } = await supabase.rpc('archive_matter', { p_id: id });
   if (error) return { error: friendly(error.message) };
-  if (!count) return { error: 'Only partners and admins can delete a matter.' };
   revalidatePath('/matters');
+  revalidatePath('/archive');
+  return {};
+}
+
+export async function archiveEvent(id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('archive_event', { p_id: id });
+  if (error) return { error: friendly(error.message) };
+  revalidatePath('/today');
+  revalidatePath('/archive');
+  return {};
+}
+
+export async function restoreItem(kind: 'matter' | 'event', id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc(kind === 'matter' ? 'restore_matter' : 'restore_event', { p_id: id });
+  if (error) return { error: friendly(error.message) };
+  revalidatePath('/archive');
+  return {};
+}
+
+export async function deleteForever(kind: 'matter' | 'event', id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('delete_forever', { p_kind: kind, p_id: id });
+  if (error) return { error: friendly(error.message) };
+  revalidatePath('/archive');
   return {};
 }
 
@@ -99,13 +139,6 @@ export async function saveEvent(formData: FormData): Promise<ActionResult> {
   return { id: data?.id as string };
 }
 
-export async function deleteEvent(id: string): Promise<ActionResult> {
-  const supabase = await createClient();
-  const { error, count } = await supabase.from('events').delete({ count: 'exact' }).eq('id', id);
-  if (error) return { error: friendly(error.message) };
-  if (!count) return { error: 'Only partners and admins can delete events.' };
-  return {};
-}
 
 // ---------- Record outcome ----------
 const OUTCOMES: Outcome[] = ['adjourned', 'reserved', 'judgment', 'struck_out', 'settled', 'held', 'other'];
@@ -136,25 +169,28 @@ export async function recordOutcome(formData: FormData): Promise<ActionResult & 
 
   let notified: string | undefined;
   if (formData.get('notify_client') === 'on') {
-    notified = await notifyClient(eventId, String(formData.get('client_message') ?? ''));
+    const { user, role } = await me();
+    notified = canTextClients(role)
+      ? await notifyClient(eventId, String(formData.get('client_message') ?? ''), user?.id ?? null)
+      : 'The outcome is saved. Clerks can\'t text clients, so no message was sent.';
   }
   revalidatePath('/today');
   return { id: (newId as string | null) ?? undefined, notified };
 }
 
-async function notifyClient(eventId: string, message: string): Promise<string> {
+async function notifyClient(eventId: string, message: string, senderId: string | null): Promise<string> {
   const text = message.trim();
   if (!text) return 'No client message was sent because the message was empty.';
   if (!termiiConfigured()) return 'The outcome is saved, but the client message was not sent: Termii is not set up yet.';
   const supabase = await createClient();
-  const { data: ev } = await supabase.from('events').select('id, firm_id, matter:matters(client_phone)').eq('id', eventId).maybeSingle();
+  const { data: ev } = await supabase.from('events').select('id, firm_id, starts_at, matter:matters(client_phone)').eq('id', eventId).maybeSingle();
   const matter = (ev as unknown as { matter: { client_phone: string | null } | null } | null)?.matter;
   const to = normalisePhone(matter?.client_phone ?? null);
   if (!ev || !to) return 'The outcome is saved. No client message was sent because the case has no client phone number.';
   const res = await sendMessage(to, text);
   try {
     const admin = createAdminClient();
-    await admin.from('reminder_log').insert({ firm_id: ev.firm_id, event_id: ev.id, kind: 'client_update', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail });
+    await admin.from('reminder_log').insert({ firm_id: ev.firm_id, event_id: ev.id, kind: 'client_update', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail, sent_by: senderId, event_starts_at: (ev as { starts_at?: string }).starts_at ?? null });
   } catch {
     // Logging is best-effort.
   }
@@ -166,7 +202,9 @@ export async function remindClient(eventId: string, message: string): Promise<Ac
   const text = message.trim();
   if (!text) return { error: 'Write the message to send.' };
   if (text.length > 900) return { error: 'Keep the message under 900 characters.' };
-  const supabase = await createClient();
+  const { supabase, user, role } = await me();
+  if (!user) return { error: 'Please sign in again.' };
+  if (!canTextClients(role)) return { error: 'Only admins, partners and associates can text clients.' };
   const { data: ev } = await supabase
     .from('events')
     .select('id, firm_id, starts_at, outcome, matter:matters(client_phone)')
@@ -178,10 +216,18 @@ export async function remindClient(eventId: string, message: string): Promise<Ac
   const to = normalisePhone(e.matter?.client_phone ?? null);
   if (!to) return { error: 'This case has no client phone number. Add one on the matter first.' };
   if (!termiiConfigured()) return { error: 'SMS and WhatsApp aren\'t set up yet. Add the Termii keys in Vercel.' };
+  const admin = createAdminClient();
+  const { count: recent } = await admin
+    .from('reminder_log')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_id', e.id)
+    .eq('kind', 'client_manual')
+    .eq('status', 'sent')
+    .gte('created_at', new Date(Date.now() - 24 * 3600e3).toISOString());
+  if ((recent ?? 0) >= MANUAL_TEXTS_PER_DAY) return { error: `This client has already had ${MANUAL_TEXTS_PER_DAY} reminders about this hearing today. Try again tomorrow, or call them.` };
   const res = await sendMessage(to, text);
   try {
-    const admin = createAdminClient();
-    await admin.from('reminder_log').insert({ firm_id: e.firm_id, event_id: e.id, kind: 'client_manual', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail });
+    await admin.from('reminder_log').insert({ firm_id: e.firm_id, event_id: e.id, kind: 'client_manual', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail, sent_by: user.id, event_starts_at: e.starts_at });
   } catch {
     // Logging is best-effort.
   }
@@ -226,12 +272,50 @@ export async function setRole(userId: string, role: Role): Promise<ActionResult>
   return {};
 }
 
+/** Removes a member, or declines someone waiting to join. Removing someone also changes the join code. */
 export async function removeMember(userId: string): Promise<ActionResult> {
   const supabase = await createClient();
-  const { error } = await supabase.from('profiles').update({ firm_id: null }).eq('id', userId);
+  const { error } = await supabase.rpc('remove_member', { p_user: userId });
   if (error) return { error: friendly(error.message) };
   revalidatePath('/team');
   return {};
+}
+
+export async function approveMember(userId: string, role: Role): Promise<ActionResult> {
+  if (!ROLES.includes(role)) return { error: 'Unknown role.' };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('approve_member', { p_user: userId, p_role: role });
+  if (error) return { error: friendly(error.message) };
+  revalidatePath('/team');
+  return {};
+}
+
+// ---------- Push notifications ----------
+export async function savePushSubscription(sub: { endpoint: string; keys: { p256dh: string; auth: string } }, userAgent: string): Promise<ActionResult> {
+  const { user, role } = await me();
+  if (!user || !role) return { error: 'Please sign in again.' };
+  if (!sub?.endpoint?.startsWith('https://') || !sub.keys?.p256dh || !sub.keys?.auth) return { error: 'This browser returned an invalid subscription.' };
+  const admin = createAdminClient();
+  // A device belongs to whoever signed in on it last.
+  await admin.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+  const { error } = await admin.from('push_subscriptions').insert({ user_id: user.id, endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth, user_agent: userAgent.slice(0, 300) });
+  if (error) return { error: 'Could not save this device. Try again.' };
+  return {};
+}
+
+export async function removePushSubscription(endpoint: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  await supabase.from('push_subscriptions').delete().eq('endpoint', endpoint);
+  return {};
+}
+
+export async function sendTestPush(): Promise<ActionResult & { reached?: number }> {
+  const { user } = await me();
+  if (!user) return { error: 'Please sign in again.' };
+  if (!pushConfigured()) return { error: 'Notifications aren\'t set up on the server yet. Add the VAPID keys in Vercel.' };
+  const reached = await sendPushToUser(user.id, { title: 'C-Diary notifications are on', body: 'You\'ll get hearing reminders here, 1 day and 1 hour before.', url: '/today', tag: 'test' });
+  if (!reached) return { error: 'No device received it. Switch notifications off and on again.' };
+  return { reached };
 }
 
 export async function regenerateJoinCode(): Promise<ActionResult & { code?: string }> {

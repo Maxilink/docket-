@@ -5,15 +5,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#2E1A5C', 700: '#3A2470', 600: '#4A3388', 100: '#EFEBF7' },
-        accent: { DEFAULT: '#49AB9B', ink: '#2D7A6E', soft: '#E1F2EF' },
+        // From the C-Diary logo: deep purple, violet and cyan.
+        primary: { DEFAULT: '#2E0562', 700: '#3D0A80', 600: '#4F05AD', 100: '#F0EAF9' },
+        // Bright cyan for fills; the darker ink version for small text so it stays readable on white.
+        accent: { DEFAULT: '#0ECED4', ink: '#0A7178', soft: '#E0F8F9' },
         canvas: '#F7F6FA',
         line: '#E6E3EE',
         muted: '#625C75',
-        ink: '#24154A',
+        ink: '#1F0F45',
         hearing: { DEFAULT: '#A12D44', soft: '#FBEAED' },
         filing: { DEFAULT: '#8A6410', soft: '#FAF0DB' },
-        client: { DEFAULT: '#2D7A6E', soft: '#E1F2EF' },
+        client: { DEFAULT: '#0A7178', soft: '#E0F8F9' },
         internal: { DEFAULT: '#50637A', soft: '#EBEFF4' },
         warn: { DEFAULT: '#8A4B0E', soft: '#FDF4E6', line: '#F1D4AE' },
       },

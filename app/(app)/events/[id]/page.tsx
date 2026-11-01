@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
-import DeleteButton from '@/components/DeleteButton';
-import { canDelete, OUTCOME_LABEL } from '@/lib/constants';
+import ArchiveButton from '@/components/ArchiveButton';
+import { canArchive, canTextClients, OUTCOME_LABEL } from '@/lib/constants';
 import RemindClient from '@/components/RemindClient';
 import { clientUpcomingText } from '@/lib/messages';
 import { fmtDateLong, fmtTime, startOfDay } from '@/lib/time';
@@ -77,7 +77,7 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
         </section>
       )}
 
-      {!past && !e.outcome && e.matter?.client_phone && (
+      {!past && !e.outcome && e.matter?.client_phone && canTextClients(profile.role) && (
         <section className="card flex flex-col gap-3 p-5">
           <div>
             <h2 className="font-bold">Remind the client</h2>
@@ -109,7 +109,7 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
 
       <div className="flex flex-wrap gap-3">
         {!past && <Link href={`/events/${e.id}/edit`} className="btn-primary">Edit</Link>}
-        {canDelete(profile.role) && <DeleteButton kind="event" id={e.id} after={e.matter ? `/matters/${e.matter.id}` : '/calendar'} label="Delete this event for everyone?" />}
+        {canArchive(profile.role) && <ArchiveButton kind="event" id={e.id} after={e.matter ? `/matters/${e.matter.id}` : '/calendar'} label="Archive this event? It disappears from the diary and its reminders stop." />}
       </div>
     </div>
   );
