@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
-import DeleteButton from '@/components/DeleteButton';
-import { canDelete, EVENT_TYPES } from '@/lib/constants';
+import ArchiveButton from '@/components/ArchiveButton';
+import { canArchive, canTextClients, EVENT_TYPES } from '@/lib/constants';
 import RemindClient from '@/components/RemindClient';
 import { clientUpcomingText } from '@/lib/messages';
 import { fmtDate, fmtDateLong, fmtTime, relDay } from '@/lib/time';
@@ -56,7 +56,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
             <Link href={`/events/new?matter=${m.id}`} className="btn-primary">+ Add date</Link>
             <Link href={`/matters/${m.id}/edit`} className="btn-ghost">Edit matter</Link>
             <Link href={`/messages?c=m:${m.id}`} className="btn-ghost">Team discussion</Link>
-            {canDelete(profile.role) && <DeleteButton kind="matter" id={m.id} after="/matters" label="Delete this matter and all its dates?" />}
+            {canArchive(profile.role) && <ArchiveButton kind="matter" id={m.id} after="/matters" label="Archive this matter and all its dates? You can restore it from the Archive." />}
           </div>
         </div>
         <div className="flex w-full max-w-sm flex-col gap-1.5 rounded-xl bg-primary p-5 text-white">
@@ -85,7 +85,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
         </div>
       </header>
 
-      {next && m.client_phone && (next.type === 'hearing' || next.type === 'client') && (
+      {next && m.client_phone && canTextClients(profile.role) && (next.type === 'hearing' || next.type === 'client') && (
         <section className="card flex flex-col gap-3 p-5">
           <div>
             <h2 className="font-bold">Remind the client</h2>

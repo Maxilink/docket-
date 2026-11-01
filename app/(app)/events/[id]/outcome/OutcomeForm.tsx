@@ -17,15 +17,17 @@ interface Props {
   clientName: string | null;
   smsReady: boolean;
   minDate: string;
+  /** Clerks can't text clients. */
+  canText: boolean;
 }
 
-export default function OutcomeForm({ event, staff, firmName, clientPhone, clientName, smsReady, minDate }: Props) {
+export default function OutcomeForm({ event, staff, firmName, clientPhone, clientName, smsReady, minDate, canText }: Props) {
   const router = useRouter();
   const [outcome, setOutcome] = useState<Outcome>(event.type === 'hearing' ? 'adjourned' : 'held');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('09:00');
   const [purpose, setPurpose] = useState(event.purpose ?? '');
-  const [notify, setNotify] = useState(Boolean(clientPhone));
+  const [notify, setNotify] = useState(Boolean(clientPhone) && canText);
   const [message, setMessage] = useState('');
   const [edited, setEdited] = useState(false);
   const [error, setError] = useState('');
@@ -134,7 +136,9 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 font-semibold">Client update</legend>
-          {clientPhone ? (
+          {!canText ? (
+            <p className="text-sm text-muted">Clerks can&apos;t text clients. Ask counsel or a partner to send the client an update.</p>
+          ) : clientPhone ? (
             <>
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="notify_client" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="h-5 w-5 accent-primary" />

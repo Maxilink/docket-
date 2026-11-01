@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireMember, getStaff, firstName } from '@/lib/session';
 import { EventRow, Empty, SectionCard, EVENT_SELECT, Pill } from '@/components/EventBits';
 import { addDays, daysUntil, fmtDate, fmtDateLong, fmtTime, startOfDay } from '@/lib/time';
+import { canTextClients } from '@/lib/constants';
 import type { DiaryEvent } from '@/lib/types';
 
 export const metadata = { title: 'Today' };
@@ -108,7 +109,7 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
         <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-6">
           <SectionCard title="Today's cause list" aside={`${today.length} ${today.length === 1 ? 'item' : 'items'}`}>
             {today.length ? (
-              <ul>{today.map((e) => <EventRow key={e.id} e={e} staff={staff} now={now} firmName={firm.name} />)}</ul>
+              <ul>{today.map((e) => <EventRow key={e.id} e={e} staff={staff} now={now} firmName={canTextClients(profile.role) ? firm.name : undefined} />)}</ul>
             ) : (
               <Empty title="Nothing in the diary today">
                 <p>{mine ? 'Switch to Whole firm to see colleagues\' matters, or ' : ''}<Link href="/events/new" className="text-primary underline">add an event</Link>.</p>

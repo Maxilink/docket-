@@ -36,9 +36,14 @@ export const PURPOSES = [
 
 export const ROLES: { value: Role; label: string; note: string }[] = [
   { value: 'admin', label: 'Admin', note: 'Everything, including staff and roles' },
-  { value: 'partner', label: 'Partner', note: 'Everything except managing staff' },
-  { value: 'associate', label: 'Associate', note: 'Add and edit matters and events' },
-  { value: 'clerk', label: 'Clerk', note: 'Add and edit; cannot delete' },
+  { value: 'partner', label: 'Partner', note: 'Everything except managing staff. Can archive and restore, and see the activity log' },
+  { value: 'associate', label: 'Associate', note: 'Add and edit matters and events, and text clients' },
+  { value: 'clerk', label: 'Clerk', note: 'Add and edit matters and events. Cannot text clients or archive' },
 ];
 
-export const canDelete = (role: Role | undefined | null) => role === 'admin' || role === 'partner';
+/** Archive and restore matters and events, see the archive and the activity log. */
+export const canArchive = (role: Role | undefined | null) => role === 'admin' || role === 'partner';
+/** Only admins delete permanently, and only from the archive. */
+export const canDeleteForever = (role: Role | undefined | null) => role === 'admin';
+/** Clerks can't send free-text messages to clients. */
+export const canTextClients = (role: Role | undefined | null) => role === 'admin' || role === 'partner' || role === 'associate';

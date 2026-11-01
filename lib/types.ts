@@ -14,6 +14,8 @@ export interface Profile {
   full_name: string;
   phone: string | null;
   role: Role;
+  status?: 'active' | 'pending';
+  requested_at?: string | null;
 }
 
 export interface Matter {

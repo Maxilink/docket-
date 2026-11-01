@@ -4,6 +4,7 @@ import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT } from '@/components/EventBits';
 import { fmtTime, relDay, fmtDateLong, ymd, startOfDay, addDays } from '@/lib/time';
 import { termiiConfigured } from '@/lib/termii';
+import { canTextClients } from '@/lib/constants';
 import type { DiaryEvent } from '@/lib/types';
 import OutcomeForm from './OutcomeForm';
 
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function OutcomePage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const { supabase, firm } = await requireMember();
+  const { supabase, firm, profile } = await requireMember();
   const [{ data }, staff] = await Promise.all([supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(), getStaff(supabase)]);
   if (!data) notFound();
   const e = data as unknown as DiaryEvent;
@@ -39,6 +40,7 @@ export default async function OutcomePage(props: { params: Promise<{ id: string 
         clientPhone={e.matter?.client_phone ?? null}
         clientName={e.matter?.client_name ?? null}
         smsReady={termiiConfigured()}
+        canText={canTextClients(profile.role)}
         minDate={ymd(addDays(now, 1))}
       />
     </div>
