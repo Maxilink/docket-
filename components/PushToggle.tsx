@@ -4,7 +4,7 @@ import { removePushSubscription, savePushSubscription, sendTestPush } from '@/ap
 
 type State = 'loading' | 'unsupported' | 'ios-install' | 'blocked' | 'off' | 'on';
 
-const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+const VAPID = (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '').trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
 
 function keyBytes(base64: string) {
   const pad = '='.repeat((4 - (base64.length % 4)) % 4);
