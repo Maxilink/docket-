@@ -5,7 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { fromInputs } from '@/lib/time';
 import { normalisePhone } from '@/lib/phone';
 import { sendMessage, termiiConfigured } from '@/lib/termii';
-import { pushConfigured, sendPushToUser } from '@/lib/push';
+import { pushConfigured, pushProblem, sendPushToUser } from '@/lib/push';
 import { canTextClients } from '@/lib/constants';
 import type { ActionResult, EventType, Outcome, Role } from '@/lib/types';
 
@@ -312,7 +312,7 @@ export async function removePushSubscription(endpoint: string): Promise<ActionRe
 export async function sendTestPush(): Promise<ActionResult & { reached?: number }> {
   const { user } = await me();
   if (!user) return { error: 'Please sign in again.' };
-  if (!pushConfigured()) return { error: 'Notifications aren\'t set up on the server yet. Add the VAPID keys in Vercel.' };
+  if (!pushConfigured()) return { error: `Notifications aren't set up on the server yet. ${pushProblem()}` };
   const reached = await sendPushToUser(user.id, { title: 'C-Diary notifications are on', body: 'You\'ll get hearing reminders here, 1 day and 1 hour before.', url: '/today', tag: 'test' });
   if (!reached) return { error: 'No device received it. Switch notifications off and on again.' };
   return { reached };

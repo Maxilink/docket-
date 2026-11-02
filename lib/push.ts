@@ -12,20 +12,41 @@ export interface PushPayload {
 }
 
 let configured: boolean | null = null;
+let problem = '';
 
-/** True when the VAPID keys are set in the environment. */
+/** Removes spaces, line breaks and quotes that often sneak in when keys are pasted into Vercel. */
+const tidy = (v: string | undefined) => (v ?? '').trim().replace(/^["']|["']$/g, '').replace(/\s+/g, '');
+
+/** True when the VAPID keys are set in the environment and valid. */
 export function pushConfigured() {
   if (configured !== null) return configured;
-  const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  const priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) return (configured = false);
+  const pub = tidy(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+  const priv = tidy(process.env.VAPID_PRIVATE_KEY);
+  let subject = (process.env.VAPID_SUBJECT ?? '').trim().replace(/^["']|["']$/g, '').replace(/^mailto:\s+/i, 'mailto:');
+  if (subject && !/^(mailto:|https:\/\/)/i.test(subject) && subject.includes('@')) subject = `mailto:${subject}`;
+  if (!pub) { problem = 'NEXT_PUBLIC_VAPID_PUBLIC_KEY is missing in Vercel.'; return (configured = false); }
+  if (!priv) { problem = 'VAPID_PRIVATE_KEY is missing in Vercel, or the site hasn\'t been redeployed since it was added.'; return (configured = false); }
   try {
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:support@example.com', pub, priv);
+    webpush.setVapidDetails(subject || 'mailto:support@example.com', pub, priv);
     configured = true;
-  } catch {
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    problem = /subject/i.test(msg)
+      ? 'VAPID_SUBJECT must start with mailto: followed by an email address, e.g. mailto:admin@yourfirm.com.'
+      : /private/i.test(msg)
+        ? 'VAPID_PRIVATE_KEY is not valid. Copy the Private Key again from the npx web-push output.'
+        : /public/i.test(msg)
+          ? 'NEXT_PUBLIC_VAPID_PUBLIC_KEY is not valid. Copy the Public Key again from the npx web-push output.'
+          : `The VAPID keys were rejected: ${msg}`;
     configured = false;
   }
   return configured;
+}
+
+/** Why push notifications aren't working on the server, in plain words. Empty when they are. */
+export function pushProblem() {
+  pushConfigured();
+  return problem;
 }
 
 /**
