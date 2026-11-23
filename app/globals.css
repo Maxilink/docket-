@@ -4,24 +4,47 @@
 
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
-  body { @apply bg-canvas text-ink font-sans antialiased; font-size: 15px; line-height: 1.5; }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+    /* Soft purple and cyan wash at the top of every page */
+    background-image:
+      radial-gradient(900px 420px at 85% -120px, rgba(106, 47, 208, 0.10), transparent 70%),
+      radial-gradient(700px 360px at 10% -140px, rgba(14, 206, 212, 0.12), transparent 70%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
   h1, h2, h3 { text-wrap: balance; }
   :focus-visible { outline: 2px solid #0A7178; outline-offset: 2px; }
   input, select, textarea { font: inherit; }
 }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed; min-height: 44px; }
-  .btn-primary { @apply btn bg-primary text-white hover:bg-primary-700; }
-  .btn-accent { @apply btn bg-accent text-primary hover:brightness-95; }
-  .btn-soft { @apply btn border border-accent bg-white text-accent-ink hover:bg-accent-soft; }
-  .btn-ghost { @apply btn border border-line bg-white text-ink hover:border-muted; }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 font-semibold
+      transition duration-200 ease-out hover:-translate-y-px active:translate-y-0
+      disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0;
+    min-height: 44px;
+  }
+  .btn-primary { @apply btn bg-gradient-to-br from-primary-600 to-primary text-white shadow-sm hover:shadow-lift; }
+  .btn-accent { @apply btn bg-gradient-to-br from-accent-300 to-accent text-primary shadow-sm hover:shadow-glow; }
+  .btn-soft { @apply btn border border-accent bg-white text-accent-ink hover:bg-accent-soft hover:shadow-glow; }
+  .btn-ghost { @apply btn border border-line bg-white text-ink hover:border-primary-200 hover:bg-primary-50 hover:text-primary; }
   .btn-danger { @apply btn border border-hearing bg-white text-hearing hover:bg-hearing-soft; }
-  .card { @apply rounded-2xl border border-line bg-white; }
+  .card { @apply rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(46,5,98,0.04)]; }
+  /* Cards people click or scan: lift a little on hover */
+  .card-hover { @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lift; }
+  .row-hover { @apply transition-colors duration-150 hover:bg-primary-50; }
   .field { @apply flex flex-col gap-1.5 text-sm font-medium text-muted min-w-0; }
-  .input { @apply w-full rounded-xl border border-line bg-canvas px-3 text-[15px] font-normal text-ink focus:border-accent-ink focus:bg-white focus:outline-none; min-height: 44px; }
+  .input {
+    @apply w-full rounded-xl border border-line bg-canvas px-3 text-[15px] font-normal text-ink transition
+      hover:border-primary-200 focus:border-accent-ink focus:bg-white focus:outline-none focus:ring-4 focus:ring-accent/15;
+    min-height: 44px;
+  }
   .label-caps { @apply text-[11px] font-semibold uppercase tracking-[0.1em]; }
   .tabular { font-variant-numeric: tabular-nums; }
+  .text-gradient { @apply bg-gradient-to-r from-primary to-primary-500 bg-clip-text text-transparent; }
 }
 
 @media (prefers-reduced-motion: reduce) {
