@@ -66,7 +66,7 @@ export default async function MattersPage(props: { searchParams: Promise<{ q?: s
                   const n = nextBy.get(m.id);
                   const lead = staff.find((s) => s.id === m.lead_lawyer_id)?.full_name;
                   return (
-                    <tr key={m.id} className="hover:bg-canvas">
+                    <tr key={m.id} className="row-hover">
                       <td className="px-5 py-3">
                         <Link href={`/matters/${m.id}`} className="font-semibold text-ink hover:underline">{m.title}</Link>
                         {m.suit_number && <div className="font-mono text-[13px] text-primary-600">{m.suit_number}</div>}
