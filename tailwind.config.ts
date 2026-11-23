@@ -5,21 +5,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#2E1A5C', 800: '#251548', 700: '#3A2470', 600: '#4A3388', 500: '#6446B0', 400: '#8B6FD1', 200: '#DCD3F0', 100: '#EFEBF7', 50: '#F7F4FC' },
-        accent: { DEFAULT: '#49AB9B', ink: '#2D7A6E', soft: '#E1F2EF', 300: '#7FCBBE' },
+        // From the C-Diary logo: deep purple, violet and cyan.
+        primary: { DEFAULT: '#2E0562', 800: '#22044A', 700: '#3D0A80', 600: '#4F05AD', 500: '#6A2FD0', 400: '#8F63E0', 200: '#DCCDF3', 100: '#F0EAF9', 50: '#F8F4FD' },
+        // Bright cyan for fills; the darker ink version for small text so it stays readable on white.
+        accent: { DEFAULT: '#0ECED4', ink: '#0A7178', soft: '#E0F8F9', 300: '#6BE3E7' },
         canvas: '#F7F6FA',
         line: '#E6E3EE',
         muted: '#625C75',
-        ink: '#24154A',
+        ink: '#1F0F45',
         hearing: { DEFAULT: '#A12D44', soft: '#FBEAED' },
         filing: { DEFAULT: '#8A6410', soft: '#FAF0DB' },
-        client: { DEFAULT: '#2D7A6E', soft: '#E1F2EF' },
+        client: { DEFAULT: '#0A7178', soft: '#E0F8F9' },
         internal: { DEFAULT: '#50637A', soft: '#EBEFF4' },
         warn: { DEFAULT: '#8A4B0E', soft: '#FDF4E6', line: '#F1D4AE' },
       },
       boxShadow: {
-        lift: '0 10px 30px -12px rgba(46, 26, 92, 0.28)',
-        glow: '0 8px 24px -8px rgba(73, 171, 155, 0.55)',
+        lift: '0 10px 30px -12px rgba(46, 5, 98, 0.30)',
+        glow: '0 8px 24px -8px rgba(14, 206, 212, 0.55)',
       },
       fontFamily: {
         display: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
