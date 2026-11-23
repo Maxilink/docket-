@@ -36,7 +36,7 @@ export function EventRow({ e, staff, showDate = false, now = new Date(), firmNam
   const rel = relDay(d, now);
   const canRemind = Boolean(firmName && !e.outcome && d > now && e.matter?.client_phone && (e.type === 'hearing' || e.type === 'client'));
   return (
-    <li className={`grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-line/70 px-5 py-4 last:border-b-0 sm:grid-cols-[72px_minmax(0,1fr)_auto]`}>
+    <li className={`row-hover grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-line/70 px-5 py-4 last:border-b-0 sm:grid-cols-[72px_minmax(0,1fr)_auto]`}>
       <div className="tabular flex flex-col">
         {showDate ? (
           <>
@@ -95,10 +95,17 @@ export function Empty({ title, children }: { title: string; children?: React.Rea
   );
 }
 
-export function SectionCard({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
+const TONES = {
+  plain: { box: '', head: 'border-line' },
+  purple: { box: 'border-primary-200 bg-gradient-to-br from-primary-200/80 via-primary-100 to-primary-50', head: 'border-primary-200' },
+  warn: { box: 'border-warn-line bg-gradient-to-br from-[#FBE3C4] via-warn-soft to-[#FFFBF5]', head: 'border-warn-line' },
+  teal: { box: 'border-accent/40 bg-gradient-to-br from-[#C9F1F3] via-accent-soft to-[#F5FDFD]', head: 'border-accent/30' },
+};
+
+export function SectionCard({ title, aside, children, tone = 'plain' }: { title: string; aside?: React.ReactNode; children: React.ReactNode; tone?: keyof typeof TONES }) {
   return (
-    <section className="card min-w-0">
-      <div className="flex items-baseline justify-between gap-3 border-b border-line px-5 py-4">
+    <section className={`card min-w-0 overflow-hidden ${TONES[tone].box}`}>
+      <div className={`flex items-baseline justify-between gap-3 border-b px-5 py-4 ${TONES[tone].head}`}>
         <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>
         {aside && <div className="text-sm text-muted">{aside}</div>}
       </div>
