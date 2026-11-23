@@ -96,13 +96,21 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
         </div>
       )}
 
-      <section aria-label="At a glance" className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white px-5 py-4">
-            <div className="tabular font-display text-3xl leading-tight">{s.n}</div>
-            <div className="text-sm text-muted">{s.label}</div>
-          </div>
-        ))}
+      <section aria-label="At a glance" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {stats.map((s, i) => {
+          const tone = [
+            'border-primary-200 bg-gradient-to-br from-primary-200 to-primary-100 text-primary',
+            'border-hearing/25 bg-gradient-to-br from-[#F6D3DB] to-hearing-soft text-hearing',
+            'border-filing/25 bg-gradient-to-br from-[#F3DFAE] to-filing-soft text-filing',
+            'border-accent/40 bg-gradient-to-br from-[#B8EEF0] to-accent-soft text-accent-ink',
+          ][i % 4];
+          return (
+            <div key={s.label} className={`card card-hover px-5 py-4 ${tone}`}>
+              <div className="tabular font-display text-3xl font-bold leading-tight">{s.n}</div>
+              <div className="text-sm font-medium text-ink/80">{s.label}</div>
+            </div>
+          );
+        })}
       </section>
 
       <div className="flex flex-wrap items-start gap-6">
@@ -119,14 +127,14 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
 
           {awaitingEarlier.length > 0 && (
             <div id="awaiting">
-              <SectionCard title="Awaiting outcome" aside="Last 90 days">
+              <SectionCard title="Awaiting outcome" aside="Last 90 days" tone="warn">
                 <ul>{awaitingEarlier.map((e) => <EventRow key={e.id} e={e} staff={staff} showDate now={now} />)}</ul>
               </SectionCard>
             </div>
           )}
 
           {noNext.length > 0 && (
-            <SectionCard title="Active matters with no next date">
+            <SectionCard title="Active matters with no next date" tone="purple">
               <ul className="divide-y divide-line/70">
                 {noNext.slice(0, 8).map((m) => (
                   <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
