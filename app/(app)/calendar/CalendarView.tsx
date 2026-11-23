@@ -53,7 +53,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href={`/calendar?m=${prev}`} aria-label="Previous month" className="btn-ghost w-11 px-0">‹</Link>
-          <h1 className="min-w-[200px] text-center font-display text-3xl font-bold tracking-tight">{MONTHS[month]} {year}</h1>
+          <h1 className="text-gradient min-w-[200px] text-center font-display text-3xl font-bold tracking-tight">{MONTHS[month]} {year}</h1>
           <Link href={`/calendar?m=${next}`} aria-label="Next month" className="btn-ghost w-11 px-0">›</Link>
           <Link href="/calendar" className="btn-ghost">Today</Link>
         </div>
@@ -66,7 +66,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
                 type="button"
                 aria-pressed={on}
                 onClick={() => setHidden((h) => ({ ...h, [t]: on }))}
-                className={`inline-flex min-h-[36px] items-center gap-2 rounded-full border px-3 text-sm ${on ? 'border-muted bg-primary-100 text-ink' : 'border-line bg-white text-muted'}`}
+                className={`inline-flex min-h-[36px] items-center gap-2 rounded-full border px-3 text-sm ${on ? 'border-primary-200 bg-primary-100 text-ink' : 'border-line bg-white text-muted'} transition hover:-translate-y-px hover:border-primary-200 hover:bg-primary-50`}
               >
                 <span className={`h-2.5 w-2.5 rounded-full ${EVENT_TYPES[t].dot}`} />
                 {EVENT_TYPES[t].label}
@@ -78,10 +78,10 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
       </header>
 
       <div className="flex flex-wrap items-start gap-6">
-        <section aria-label="Month" className="card min-w-0 flex-[999_1_600px] overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-line bg-primary-100">
+        <section aria-label="Month" className="card min-w-0 flex-[999_1_600px] overflow-hidden shadow-lift">
+          <div className="grid grid-cols-7 border-b border-line bg-gradient-to-r from-primary to-primary-600">
             {DOW.map((d) => (
-              <span key={d} className="label-caps px-2 py-2 text-muted">{d}</span>
+              <span key={d} className="label-caps px-2 py-2.5 text-primary-100">{d}</span>
             ))}
           </div>
           <div className="grid grid-cols-7">
@@ -107,12 +107,12 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
                     setTip({ key: c.key, x: Math.min(Math.max(8, r.left + r.width / 2 - 150), window.innerWidth - 308), y: above ? r.top - 6 : r.bottom + 6, above });
                   }}
                   onMouseLeave={() => setTip(null)}
-                  className={`relative flex min-h-[64px] min-w-0 flex-col gap-1 border-line p-1.5 text-left sm:min-h-[112px] ${i % 7 !== 6 ? 'border-r' : ''} ${i < visibleCells.length - 7 ? 'border-b' : ''} ${c.inMonth ? 'bg-white hover:bg-canvas' : 'bg-canvas text-muted/70'} ${isSel ? 'z-[1] ring-2 ring-inset ring-primary' : ''}`}
+                  className={`relative flex min-h-[64px] min-w-0 flex-col gap-1 border-line p-1.5 text-left sm:min-h-[112px] ${i % 7 !== 6 ? 'border-r' : ''} ${i < visibleCells.length - 7 ? 'border-b' : ''} group transition-colors duration-150 ${c.inMonth ? 'bg-white hover:bg-primary-50' : 'bg-canvas text-muted/70 hover:bg-primary-50/60'} ${isSel ? 'z-[1] ring-2 ring-inset ring-primary' : ''}`}
                 >
-                  <span className={`tabular grid h-7 w-7 place-items-center rounded-full text-[13px] ${isToday ? 'bg-accent font-semibold text-primary' : 'font-medium'}`}>{c.day}</span>
+                  <span className={`tabular grid h-7 w-7 place-items-center rounded-full text-[13px] transition-transform duration-150 group-hover:scale-110 ${isToday ? 'bg-gradient-to-br from-accent-300 to-accent font-bold text-primary shadow-glow' : 'font-medium group-hover:bg-white'}`}>{c.day}</span>
                   <span className="hidden flex-col gap-1 sm:flex">
                     {list.slice(0, 3).map((e) => (
-                      <span key={e.id} className={`truncate rounded px-1.5 py-0.5 text-xs font-medium ${EVENT_TYPES[e.type].bg} ${EVENT_TYPES[e.type].text} ${e.outcome ? 'opacity-60' : ''}`}>
+                      <span key={e.id} className={`truncate rounded-md px-1.5 py-0.5 text-xs font-semibold transition hover:brightness-95 ${EVENT_TYPES[e.type].bg} ${EVENT_TYPES[e.type].text} ${e.outcome ? 'opacity-60' : ''}`}>
                         {fmtTime(new Date(e.starts_at)).replace(' ', '')} {e.title}
                       </span>
                     ))}
@@ -129,8 +129,8 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
           </div>
         </section>
 
-        <aside aria-label="Selected day" className="card min-w-0 flex-[1_1_300px]">
-          <div className="border-b border-line px-5 py-4">
+        <aside aria-label="Selected day" className="card min-w-0 flex-[1_1_300px] overflow-hidden">
+          <div className="border-b border-line bg-gradient-to-br from-primary-50 to-white px-5 py-4">
             <p className="label-caps text-accent-ink">{selected === today ? 'Today' : selected < today ? 'Past day' : 'Upcoming'}</p>
             <h2 className="font-display text-xl font-bold tracking-tight">{fmtDateLong(selDate)}</h2>
           </div>
@@ -143,7 +143,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
             <ul className="flex flex-col p-2">
               {selList.map((e) => (
                 <li key={e.id}>
-                  <Link href={`/events/${e.id}`} className={`my-1 flex flex-col gap-0.5 rounded-lg border-l-[3px] px-3 py-2.5 hover:bg-canvas ${EVENT_TYPES[e.type].border}`}>
+                  <Link href={`/events/${e.id}`} className={`my-1 flex flex-col gap-0.5 rounded-xl border-l-[3px] px-3 py-2.5 transition duration-200 hover:translate-x-1 hover:bg-primary-50 hover:shadow-sm ${EVENT_TYPES[e.type].border}`}>
                     <span className={`label-caps ${EVENT_TYPES[e.type].text}`}>{EVENT_TYPES[e.type].label} · {fmtTime(new Date(e.starts_at))}</span>
                     <span className="font-semibold leading-snug">{e.title}</span>
                     {e.matter?.suit_number && <span className="font-mono text-[13px] text-primary-600">{e.matter.suit_number}</span>}
@@ -160,7 +160,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
       {tip && tipList.length > 0 && (
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-40 w-[300px] rounded-xl border border-line bg-white p-3 text-[13px] shadow-lg"
+          className="pointer-events-none fixed z-40 w-[300px] rounded-2xl border border-primary-200 bg-white/95 p-3 text-[13px] shadow-lift backdrop-blur"
           style={{ left: tip.x, top: tip.y, transform: tip.above ? 'translateY(-100%)' : undefined }}
         >
           <p className="label-caps mb-1.5 text-muted">{fmtDateLong(new Date(`${tip.key}T12:00:00+01:00`))}</p>
