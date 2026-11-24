@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { fromInputs } from '@/lib/time';
 import { normalisePhone } from '@/lib/phone';
-import { sendMessage, termiiConfigured } from '@/lib/termii';
+import { cleanEmail } from '@/lib/email';
+import { clientChannels, sendToClient, type Attempt } from '@/lib/notify';
 import { pushConfigured, pushProblem, sendPushToUser } from '@/lib/push';
 import { canTextClients } from '@/lib/constants';
 import type { ActionResult, EventType, Outcome, Role } from '@/lib/types';
@@ -40,6 +41,9 @@ export async function saveMatter(formData: FormData): Promise<ActionResult> {
   const clientPhoneRaw = str(formData, 'client_phone');
   const clientPhone = clientPhoneRaw ? normalisePhone(clientPhoneRaw) : null;
   if (clientPhoneRaw && !clientPhone) return { error: 'The client phone number doesn\'t look right. Use a format like 0803 123 4567.' };
+  const clientEmailRaw = str(formData, 'client_email');
+  const clientEmail = clientEmailRaw ? cleanEmail(clientEmailRaw) : null;
+  if (clientEmailRaw && !clientEmail) return { error: 'The client email address doesn\'t look right. Use a format like name@example.com.' };
   const row = {
     title,
     suit_number: str(formData, 'suit_number'),
@@ -48,6 +52,7 @@ export async function saveMatter(formData: FormData): Promise<ActionResult> {
     judge: str(formData, 'judge'),
     client_name: str(formData, 'client_name'),
     client_phone: clientPhone,
+    client_email: clientEmail,
     opposing_counsel: str(formData, 'opposing_counsel'),
     lead_lawyer_id: str(formData, 'lead_lawyer_id'),
     description: str(formData, 'description'),
@@ -102,19 +107,23 @@ export async function deleteForever(kind: 'matter' | 'event', id: string): Promi
 }
 
 // ---------- Events ----------
-const TYPES: EventType[] = ['hearing', 'filing', 'client', 'internal'];
+const TYPES: EventType[] = ['hearing', 'filing', 'client', 'internal', 'other'];
 
 export async function saveEvent(formData: FormData): Promise<ActionResult> {
   const id = str(formData, 'id');
   const title = str(formData, 'title');
   const type = (str(formData, 'type') ?? 'hearing') as EventType;
   if (!TYPES.includes(type)) return { error: 'Pick an event type.' };
+  const typeLabel = type === 'other' ? str(formData, 'type_label') : null;
+  if (type === 'other' && !typeLabel) return { error: 'Say what kind of event this is, for example "Arbitration" or "Site visit".' };
+  if (typeLabel && typeLabel.length > 60) return { error: 'Keep the event type under 60 characters.' };
   if (!title) return { error: 'Add a title so colleagues know what this is.' };
   const at = fromInputs(String(formData.get('date') ?? ''), String(formData.get('time') ?? ''));
   if (!at) return { error: 'Pick a date for the event.' };
   if (at.getTime() < Date.now()) return { error: 'That date and time has already passed. Pick a time in the future.' };
   const row = {
     type,
+    type_label: typeLabel,
     title,
     starts_at: at.toISOString(),
     matter_id: str(formData, 'matter_id'),
@@ -181,41 +190,68 @@ export async function recordOutcome(formData: FormData): Promise<ActionResult & 
 async function notifyClient(eventId: string, message: string, senderId: string | null): Promise<string> {
   const text = message.trim();
   if (!text) return 'No client message was sent because the message was empty.';
-  if (!termiiConfigured()) return 'The outcome is saved, but the client message was not sent: Termii is not set up yet.';
   const supabase = await createClient();
-  const { data: ev } = await supabase.from('events').select('id, firm_id, starts_at, matter:matters(client_phone)').eq('id', eventId).maybeSingle();
-  const matter = (ev as unknown as { matter: { client_phone: string | null } | null } | null)?.matter;
-  const to = normalisePhone(matter?.client_phone ?? null);
-  if (!ev || !to) return 'The outcome is saved. No client message was sent because the case has no client phone number.';
-  const res = await sendMessage(to, text);
+  const { data: ev } = await supabase
+    .from('events')
+    .select('id, firm_id, starts_at, matter:matters(client_name, client_phone, client_email, suit_number), firm:firms(name)')
+    .eq('id', eventId)
+    .maybeSingle();
+  const e = ev as unknown as { id: string; firm_id: string; starts_at: string; firm: { name: string } | null; matter: { client_name: string | null; client_phone: string | null; client_email: string | null; suit_number: string | null } | null } | null;
+  if (!e || !e.matter) return 'The outcome is saved. No client message was sent because the case has no client email or phone number.';
+  const reach = clientChannels({ email: e.matter.client_email, phone: e.matter.client_phone });
+  if (!reach.count) {
+    return e.matter.client_email || e.matter.client_phone
+      ? 'The outcome is saved, but the client message was not sent: email (Brevo) and SMS (Termii) are not set up yet.'
+      : 'The outcome is saved. No client message was sent because the case has no client email or phone number.';
+  }
+  const firmName = e.firm?.name ?? '';
+  const results = await sendToClient(
+    { email: e.matter.client_email, phone: e.matter.client_phone, name: e.matter.client_name, firmName },
+    `Update on your case${e.matter.suit_number ? ` ${e.matter.suit_number}` : ''}`,
+    text,
+  );
+  await logClient(results, { firm_id: e.firm_id, event_id: e.id, kind: 'client_update', sent_by: senderId, event_starts_at: e.starts_at });
+  return summarise(results, 'The client update was sent', 'The outcome is saved, but the client message failed to send. Check your Brevo and Termii settings.');
+}
+
+/** Writes one reminder_log row per channel tried. Best-effort. */
+async function logClient(results: Attempt[], base: { firm_id: string; event_id: string; kind: string; sent_by: string | null; event_starts_at: string | null }) {
   try {
     const admin = createAdminClient();
-    await admin.from('reminder_log').insert({ firm_id: ev.firm_id, event_id: ev.id, kind: 'client_update', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail, sent_by: senderId, event_starts_at: (ev as { starts_at?: string }).starts_at ?? null });
+    if (results.length) {
+      await admin.from('reminder_log').insert(results.map((r) => ({ ...base, channel: r.channel, recipient: r.recipient, status: r.ok ? 'sent' : 'failed', detail: r.detail })));
+    }
   } catch {
     // Logging is best-effort.
   }
-  return res.ok ? 'The client update was sent.' : 'The outcome is saved, but the client message failed to send. Check your Termii balance and sender ID.';
+}
+
+function summarise(results: Attempt[], okLead: string, allFailed: string) {
+  const ok = results.filter((r) => r.ok).map((r) => (r.channel === 'email' ? 'email' : 'SMS'));
+  const bad = results.filter((r) => !r.ok).map((r) => (r.channel === 'email' ? 'email' : 'SMS'));
+  if (!ok.length) return allFailed;
+  return `${okLead} by ${ok.join(' and ')}.${bad.length ? ` The ${bad.join(' and ')} didn't send.` : ''}`;
 }
 
 // ---------- Remind client now ----------
-export async function remindClient(eventId: string, message: string): Promise<ActionResult & { at?: string }> {
+export async function remindClient(eventId: string, message: string): Promise<ActionResult & { at?: string; notice?: string }> {
   const text = message.trim();
   if (!text) return { error: 'Write the message to send.' };
   if (text.length > 900) return { error: 'Keep the message under 900 characters.' };
   const { supabase, user, role } = await me();
   if (!user) return { error: 'Please sign in again.' };
-  if (!canTextClients(role)) return { error: 'Only admins, partners and associates can text clients.' };
+  if (!canTextClients(role)) return { error: 'Only admins, partners and associates can message clients.' };
   const { data: ev } = await supabase
     .from('events')
-    .select('id, firm_id, starts_at, outcome, matter:matters(client_phone)')
+    .select('id, firm_id, starts_at, outcome, matter:matters(client_name, client_phone, client_email, suit_number), firm:firms(name)')
     .eq('id', eventId)
     .maybeSingle();
   if (!ev) return { error: 'Event not found.' };
-  const e = ev as unknown as { id: string; firm_id: string; starts_at: string; outcome: string | null; matter: { client_phone: string | null } | null };
+  const e = ev as unknown as { id: string; firm_id: string; starts_at: string; outcome: string | null; firm: { name: string } | null; matter: { client_name: string | null; client_phone: string | null; client_email: string | null; suit_number: string | null } | null };
   if (new Date(e.starts_at).getTime() < Date.now() - 3600e3) return { error: 'This hearing has passed, so there is nothing to remind the client about.' };
-  const to = normalisePhone(e.matter?.client_phone ?? null);
-  if (!to) return { error: 'This case has no client phone number. Add one on the matter first.' };
-  if (!termiiConfigured()) return { error: 'SMS and WhatsApp aren\'t set up yet. Add the Termii keys in Vercel.' };
+  if (!e.matter?.client_email && !e.matter?.client_phone) return { error: 'This case has no client email or phone number. Add one on the matter first.' };
+  const reach = clientChannels({ email: e.matter.client_email, phone: e.matter.client_phone });
+  if (!reach.count) return { error: 'Email and SMS aren\'t set up yet. Add the Brevo or Termii keys in Vercel.' };
   const admin = createAdminClient();
   const { count: recent } = await admin
     .from('reminder_log')
@@ -224,16 +260,17 @@ export async function remindClient(eventId: string, message: string): Promise<Ac
     .eq('kind', 'client_manual')
     .eq('status', 'sent')
     .gte('created_at', new Date(Date.now() - 24 * 3600e3).toISOString());
-  if ((recent ?? 0) >= MANUAL_TEXTS_PER_DAY) return { error: `This client has already had ${MANUAL_TEXTS_PER_DAY} reminders about this hearing today. Try again tomorrow, or call them.` };
-  const res = await sendMessage(to, text);
-  try {
-    await admin.from('reminder_log').insert({ firm_id: e.firm_id, event_id: e.id, kind: 'client_manual', channel: res.channel, recipient: to, status: res.ok ? 'sent' : 'failed', detail: res.detail, sent_by: user.id, event_starts_at: e.starts_at });
-  } catch {
-    // Logging is best-effort.
-  }
-  if (!res.ok) return { error: 'The message didn\'t send. Check your Termii balance and sender ID, then try again.' };
+  // Each reminder can go by email and SMS, so allow that many log rows per reminder.
+  if ((recent ?? 0) >= MANUAL_TEXTS_PER_DAY * reach.count) return { error: `This client has already had ${MANUAL_TEXTS_PER_DAY} reminders about this hearing today. Try again tomorrow, or call them.` };
+  const results = await sendToClient(
+    { email: e.matter.client_email, phone: e.matter.client_phone, name: e.matter.client_name, firmName: e.firm?.name ?? '' },
+    `Reminder: your case${e.matter.suit_number ? ` ${e.matter.suit_number}` : ''} is coming up`,
+    text,
+  );
+  await logClient(results, { firm_id: e.firm_id, event_id: e.id, kind: 'client_manual', sent_by: user.id, event_starts_at: e.starts_at });
+  if (!results.some((r) => r.ok)) return { error: 'The reminder didn\'t send. Check your Brevo and Termii settings, then try again.' };
   revalidatePath('/today');
-  return { at: new Date().toISOString() };
+  return { at: new Date().toISOString(), notice: summarise(results, 'Sent', '') };
 }
 
 // ---------- People ----------
