@@ -10,7 +10,7 @@ export default async function NewEventPage(props: { searchParams: Promise<{ date
   const { supabase, profile } = await requireMember();
   const [staff, { data: matters }] = await Promise.all([
     getStaff(supabase),
-    supabase.from('matters').select('id, title, suit_number, court, courtroom, lead_lawyer_id, client_phone').eq('status', 'active').order('title'),
+    supabase.from('matters').select('id, title, suit_number, court, courtroom, lead_lawyer_id, client_phone, client_email').eq('status', 'active').order('title'),
   ]);
   const today = ymd(new Date());
   const date = searchParams.date && /^\d{4}-\d{2}-\d{2}$/.test(searchParams.date) && searchParams.date >= today ? searchParams.date : today;
