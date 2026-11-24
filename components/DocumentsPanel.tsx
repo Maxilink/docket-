@@ -128,7 +128,7 @@ export default function DocumentsPanel({ firmId, matterId, me, canManageAll, aiR
     setOpen((o) => ({ ...o, [d.id]: true }));
     patch(d.id, { summary_status: 'working', summary_error: null });
     try {
-      const res = await fetch('/api/documents/summarize', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: d.id }) });
+      const res = await fetch('/documents/summarize', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: d.id }) });
       const body = (await res.json().catch(() => ({}))) as { summary?: string; at?: string; error?: string };
       if (!res.ok || !body.summary) patch(d.id, { summary_status: 'failed', summary_error: body.error ?? 'The summary failed. Try again.' });
       else patch(d.id, { summary: body.summary, summary_status: 'done', summarized_at: body.at ?? new Date().toISOString() });
