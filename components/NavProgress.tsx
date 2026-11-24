@@ -25,7 +25,7 @@ export default function NavProgress() {
   }, []);
 
   return (
-    <div aria-hidden="true" className={`pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px] overflow-hidden transition-opacity duration-200 ${active ? 'opacity-100' : 'opacity-0'}`}>
+    <div aria-hidden="true" className={`print:hidden pointer-events-none fixed inset-x-0 top-0 z-[60] h-[3px] overflow-hidden transition-opacity duration-200 ${active ? 'opacity-100' : 'opacity-0'}`}>
       <div className={`h-full bg-gradient-to-r from-primary-600 via-primary-500 to-accent ${active ? 'animate-[navload_1.4s_ease-out_forwards]' : 'w-0'}`} />
       <style>{`@keyframes navload { 0% { width: 0 } 60% { width: 75% } 100% { width: 92% } }`}</style>
     </div>

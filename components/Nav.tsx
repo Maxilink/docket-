@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/today', label: 'Today', icon: 'M3 10.5 12 4l9 6.5V20H3z' },
   { href: '/calendar', label: 'Calendar', icon: 'M4 5h16v15H4zM4 10h16M9 3v4M15 3v4' },
   { href: '/matters', label: 'Matters', icon: 'M5 4h9l5 5v11H5zM14 4v5h5' },
+  { href: '/cause-list', label: 'Cause list', icon: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01' },
   { href: '/messages', label: 'Messages', icon: 'M4 5h16v11H9l-5 4z' },
   { href: '/team', label: 'Team', icon: 'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6' },
 ];
@@ -37,7 +38,7 @@ export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0
     <>
       {/* Mobile top bar */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-white/85 px-4 py-3 backdrop-blur md:hidden"
+        className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-white/85 px-4 py-3 backdrop-blur md:hidden print:hidden"
         style={{ paddingTop: 'max(12px, env(safe-area-inset-top))' }}
       >
         <Link href="/today" aria-label="C-Diary, Today">
@@ -66,7 +67,7 @@ export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0
       <nav
         id="main-nav"
         aria-label="Main"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col gap-7 overflow-y-auto border-r border-primary-200 bg-gradient-to-b from-primary-200 via-primary-100 to-[#C9F1F3] px-4 py-6 shadow-2xl transition-[transform,visibility] duration-300 ease-out
+        className={`print:hidden fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col gap-7 overflow-y-auto border-r border-primary-200 bg-gradient-to-b from-primary-200 via-primary-100 to-[#C9F1F3] px-4 py-6 shadow-2xl transition-[transform,visibility] duration-300 ease-out
           md:visible md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:max-w-none md:shrink-0 md:translate-x-0 md:shadow-none
           ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}`}
         style={{ paddingTop: 'max(24px, env(safe-area-inset-top))', paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}

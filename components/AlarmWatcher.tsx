@@ -116,7 +116,7 @@ export default function AlarmWatcher({ userId }: { userId: string }) {
 
 
   return (
-    <div className="flex flex-col gap-2 px-4 pt-4 sm:px-8">
+    <div className="flex flex-col gap-2 px-4 pt-4 sm:px-8 print:hidden">
       <div className="flex justify-end">
         <button
           type="button"
