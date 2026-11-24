@@ -5,6 +5,9 @@ import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits
 import ArchiveButton from '@/components/ArchiveButton';
 import { canArchive, canTextClients, EVENT_TYPES } from '@/lib/constants';
 import RemindClient from '@/components/RemindClient';
+import DocumentsPanel, { type Doc } from '@/components/DocumentsPanel';
+import { DOC_COLUMNS } from '@/lib/docs';
+import { aiConfigured } from '@/lib/ai';
 import { clientUpcomingText } from '@/lib/messages';
 import { fmtDate, fmtDateLong, fmtTime, relDay } from '@/lib/time';
 import type { DiaryEvent, Matter } from '@/lib/types';
@@ -14,12 +17,23 @@ export const dynamic = 'force-dynamic';
 export default async function MatterPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { supabase, profile, firm } = await requireMember();
-  const [{ data }, staff, { data: evData }] = await Promise.all([
+  const [{ data }, staff, { data: evData }, { data: docData, error: docErr }] = await Promise.all([
     supabase.from('matters').select('*').eq('id', params.id).maybeSingle(),
     getStaff(supabase),
     supabase.from('events').select(EVENT_SELECT).eq('matter_id', params.id).order('starts_at', { ascending: false }),
+    supabase
+      .from('documents')
+      .select(DOC_COLUMNS)
+      .eq('matter_id', params.id)
+      .order('created_at', { ascending: false }),
   ]);
   if (!data) notFound();
+  // Private links to open each file, valid for an hour.
+  let docs = (docData ?? []) as Doc[];
+  if (docs.length) {
+    const { data: signed } = await supabase.storage.from('matter-docs').createSignedUrls(docs.map((d) => d.storage_path), 3600);
+    docs = docs.map((d) => ({ ...d, url: signed?.find((x) => x.path === d.storage_path)?.signedUrl ?? null }));
+  }
   const m = data as Matter;
   const events = (evData ?? []) as unknown as DiaryEvent[];
   const now = new Date();
@@ -110,6 +124,24 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
           </div>
         ))}
       </section>
+
+      {docErr ? (
+        <p className="rounded-xl bg-warn-soft px-4 py-3 text-sm text-warn">Documents aren&apos;t switched on yet. Run <span className="font-mono">004_documents_ai.sql</span> and then <span className="font-mono">005_court_checklist_morning_list.sql</span> in Supabase, then reload.</p>
+      ) : (
+        <DocumentsPanel
+          firmId={firm.id}
+          matterId={m.id}
+          me={profile.id}
+          canManageAll={canArchive(profile.role)}
+          aiReady={aiConfigured()}
+          staff={staff.map((x) => ({ id: x.id, name: x.full_name || 'A colleague' }))}
+          initial={docs}
+          hearings={events
+            .filter((x) => x.type === 'hearing' || x.type === 'filing')
+            .slice(0, 30)
+            .map((x) => ({ id: x.id, label: `${fmtDate(new Date(x.starts_at))}${x.purpose ? ` · ${x.purpose}` : ''}` }))}
+        />
+      )}
 
       <section className="card">
         <div className="border-b border-line px-5 py-4">
