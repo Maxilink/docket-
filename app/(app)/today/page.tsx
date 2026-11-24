@@ -80,6 +80,7 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
             <Link href="/today" aria-current={mine ? 'true' : undefined} className={`px-4 py-2.5 text-sm ${mine ? 'bg-primary font-medium text-white' : 'text-muted'}`}>My matters</Link>
             <Link href="/today?scope=all" aria-current={!mine ? 'true' : undefined} className={`px-4 py-2.5 text-sm ${!mine ? 'bg-primary font-medium text-white' : 'text-muted'}`}>Whole firm</Link>
           </div>
+          <Link href="/cause-list" className="btn-ghost">Weekly cause list</Link>
           <Link href="/events/new" className="btn-primary">+ New event</Link>
         </div>
       </header>
