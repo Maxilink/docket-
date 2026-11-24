@@ -14,7 +14,7 @@ export default async function EditEventPage(props: { params: Promise<{ id: strin
   const [{ data }, staff, { data: matters }] = await Promise.all([
     supabase.from('events').select(EVENT_SELECT).eq('id', params.id).maybeSingle(),
     getStaff(supabase),
-    supabase.from('matters').select('id, title, suit_number, court, courtroom, lead_lawyer_id, client_phone').order('title'),
+    supabase.from('matters').select('id, title, suit_number, court, courtroom, lead_lawyer_id, client_phone, client_email').order('title'),
   ]);
   if (!data) notFound();
   const e = data as unknown as DiaryEvent;
