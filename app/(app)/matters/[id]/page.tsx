@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { clientContact } from '@/lib/contact';
 import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
 import ArchiveButton from '@/components/ArchiveButton';
-import { canArchive, canTextClients, EVENT_TYPES } from '@/lib/constants';
+import { canArchive, canTextClients, EVENT_TYPES, typeName } from '@/lib/constants';
 import RemindClient from '@/components/RemindClient';
 import DocumentsPanel, { type Doc } from '@/components/DocumentsPanel';
 import { DOC_COLUMNS } from '@/lib/docs';
@@ -50,6 +51,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
     ['Judge', m.judge],
     ['Lead counsel', name(m.lead_lawyer_id)],
     ['Client', m.client_name],
+    ['Client email', m.client_email ?? null],
     ['Client phone', m.client_phone ? `+${m.client_phone}` : null],
     ['Opposing counsel', m.opposing_counsel],
     ['Hearings so far', `${hearings.length} (${adjournments} adjourned)`],
@@ -78,7 +80,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
             <>
               <span className="label-caps text-accent">Awaiting outcome</span>
               <span className="font-display text-2xl">{relDay(new Date(awaiting.starts_at), now) || fmtDate(new Date(awaiting.starts_at))}, {fmtTime(new Date(awaiting.starts_at))}</span>
-              <span className="text-sm text-[#D9D2EA]">{awaiting.purpose || EVENT_TYPES[awaiting.type].label}</span>
+              <span className="text-sm text-[#D9D2EA]">{awaiting.purpose || typeName(awaiting)}</span>
               <Link href={`/events/${awaiting.id}/outcome`} className="btn-accent mt-2">Record outcome</Link>
             </>
           ) : next ? (
@@ -99,18 +101,18 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
         </div>
       </header>
 
-      {next && m.client_phone && canTextClients(profile.role) && (next.type === 'hearing' || next.type === 'client') && (
+      {next && (m.client_email || m.client_phone) && canTextClients(profile.role) && (next.type === 'hearing' || next.type === 'client') && (
         <section className="card flex flex-col gap-3 p-5">
           <div>
             <h2 className="font-bold">Remind the client</h2>
             <p className="text-sm text-muted">
-              {m.client_name || 'Client'} · +{m.client_phone} · Next date {fmtDateLong(new Date(next.starts_at))}, {fmtTime(new Date(next.starts_at))}
+              {m.client_name || 'Client'} · {clientContact(m)} · Next date {fmtDateLong(new Date(next.starts_at))}, {fmtTime(new Date(next.starts_at))}
             </p>
           </div>
           <RemindClient
             eventId={next.id}
             clientName={m.client_name}
-            clientPhone={m.client_phone}
+            contact={clientContact(m)!}
             defaultText={clientUpcomingText(firm.name, m.client_name, new Date(next.starts_at), [next.court, next.courtroom].filter(Boolean).join(', '), next.purpose, m.suit_number)}
           />
         </section>
@@ -167,7 +169,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
                   </span>
                   <div className="flex min-w-0 flex-col gap-0.5 pb-5 pt-2.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <TypeTag type={e.type} />
+                      <TypeTag type={e.type} label={e.type_label} />
                       <Pill tone={st.tone}>{st.label}</Pill>
                     </div>
                     <Link href={`/events/${e.id}`} className="font-semibold hover:underline">{e.purpose || e.title}</Link>
