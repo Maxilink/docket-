@@ -66,7 +66,7 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
     { n: noNext.length, label: 'Active matters with no next date' },
   ];
 
-  const kindLabel: Record<string, string> = { day: 'Day-before reminder', hour: 'Hour-before reminder', client_day: 'Client reminder', client_update: 'Client update', client_manual: 'Client reminder' };
+  const kindLabel: Record<string, string> = { day: 'Day-before reminder', hour: 'Hour-before reminder', client_day: 'Client reminder', client_update: 'Client update', client_manual: 'Client reminder', email_day: 'Day-before reminder', email_hour: 'Hour-before reminder', client_email_day: 'Client reminder', push_day: 'Day-before reminder', push_hour: 'Hour-before reminder' };
 
   return (
     <>
@@ -180,14 +180,14 @@ export default async function TodayPage(props: { searchParams: Promise<{ scope?:
                   <li key={r.id} className="grid grid-cols-[64px_minmax(0,1fr)] gap-3 px-5 py-2.5 text-sm">
                     <span className="tabular text-muted">{fmtTime(new Date(r.created_at))}</span>
                     <span>
-                      <strong className={r.status === 'sent' ? 'text-accent-ink' : 'text-hearing'}>{r.status === 'sent' ? r.channel.toUpperCase() : 'Failed'}</strong> {kindLabel[r.kind] ?? r.kind} to +{r.recipient}
+                      <strong className={r.status === 'sent' ? 'text-accent-ink' : 'text-hearing'}>{r.status === 'sent' ? r.channel.toUpperCase() : 'Failed'}</strong> {kindLabel[r.kind] ?? r.kind} to {r.recipient.includes('@') ? r.recipient : r.channel === 'push' ? 'their phone' : `+${r.recipient}`}
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
               <Empty title="No reminders sent yet today">
-                <p>SMS and WhatsApp reminders appear here once Termii is connected.</p>
+                <p>Email, SMS and WhatsApp reminders appear here once Brevo or Termii is connected.</p>
               </Empty>
             )}
           </SectionCard>
