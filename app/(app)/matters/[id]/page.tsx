@@ -70,6 +70,7 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
           {m.description && <p className="whitespace-pre-wrap text-muted">{m.description}</p>}
           <div className="mt-1 flex flex-wrap gap-2">
             <Link href={`/events/new?matter=${m.id}`} className="btn-primary">+ Add date</Link>
+            <Link href={`/deadlines?matter=${m.id}`} className="btn-ghost">Work out a deadline</Link>
             <Link href={`/matters/${m.id}/edit`} className="btn-ghost">Edit matter</Link>
             <Link href={`/messages?c=m:${m.id}`} className="btn-ghost">Team discussion</Link>
             {canArchive(profile.role) && <ArchiveButton kind="matter" id={m.id} after="/matters" label="Archive this matter and all its dates? You can restore it from the Archive." />}
