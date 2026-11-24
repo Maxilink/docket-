@@ -4,6 +4,8 @@ import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT } from '@/components/EventBits';
 import { fmtTime, relDay, fmtDateLong, ymd, startOfDay, addDays } from '@/lib/time';
 import { termiiConfigured } from '@/lib/termii';
+import { emailConfigured } from '@/lib/email';
+import { clientContact } from '@/lib/contact';
 import { canTextClients } from '@/lib/constants';
 import type { DiaryEvent } from '@/lib/types';
 import OutcomeForm from './OutcomeForm';
@@ -37,9 +39,9 @@ export default async function OutcomePage(props: { params: Promise<{ id: string 
         event={e}
         staff={staff}
         firmName={firm.name}
-        clientPhone={e.matter?.client_phone ?? null}
+        contact={clientContact(e.matter)}
         clientName={e.matter?.client_name ?? null}
-        smsReady={termiiConfigured()}
+        sendReady={termiiConfigured() || emailConfigured()}
         canText={canTextClients(profile.role)}
         minDate={ymd(addDays(now, 1))}
       />

@@ -13,21 +13,22 @@ interface Props {
   event: DiaryEvent;
   staff: Profile[];
   firmName: string;
-  clientPhone: string | null;
+  /** The client's email and/or phone, for display. */
+  contact: string | null;
   clientName: string | null;
-  smsReady: boolean;
+  sendReady: boolean;
   minDate: string;
   /** Clerks can't text clients. */
   canText: boolean;
 }
 
-export default function OutcomeForm({ event, staff, firmName, clientPhone, clientName, smsReady, minDate, canText }: Props) {
+export default function OutcomeForm({ event, staff, firmName, contact, clientName, sendReady, minDate, canText }: Props) {
   const router = useRouter();
   const [outcome, setOutcome] = useState<Outcome>(event.type === 'hearing' ? 'adjourned' : 'held');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('09:00');
   const [purpose, setPurpose] = useState(event.purpose ?? '');
-  const [notify, setNotify] = useState(Boolean(clientPhone) && canText);
+  const [notify, setNotify] = useState(Boolean(contact) && canText);
   const [message, setMessage] = useState('');
   const [edited, setEdited] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +55,7 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
         ]
       : []),
     ...(outcome === 'settled' ? ['Closes the matter'] : []),
-    ...(notify && clientPhone ? [`Sends ${clientName || 'the client'} the update below`] : []),
+    ...(notify && contact ? [`Sends ${clientName || 'the client'} the update below`] : []),
   ];
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -137,12 +138,12 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-2 font-semibold">Client update</legend>
           {!canText ? (
-            <p className="text-sm text-muted">Clerks can&apos;t text clients. Ask counsel or a partner to send the client an update.</p>
-          ) : clientPhone ? (
+            <p className="text-sm text-muted">Clerks can&apos;t message clients. Ask counsel or a partner to send the client an update.</p>
+          ) : contact ? (
             <>
               <label className="flex items-center gap-2">
                 <input type="checkbox" name="notify_client" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="h-5 w-5 accent-primary" />
-                Send {clientName || 'the client'} (+{clientPhone}) an update
+                Send {clientName || 'the client'} ({contact}) an update
               </label>
               {notify && (
                 <>
@@ -155,12 +156,12 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
                     value={message}
                     onChange={(e) => { setMessage(e.target.value); setEdited(true); }}
                   />
-                  {!smsReady && <p className="text-sm text-warn">Termii isn&apos;t connected yet, so this message won&apos;t send until it is.</p>}
+                  {!sendReady && <p className="text-sm text-warn">Email and SMS aren&apos;t connected yet, so this message won&apos;t send until one of them is.</p>}
                 </>
               )}
             </>
           ) : (
-            <p className="text-sm text-muted">Add the client&apos;s phone number on the matter to send updates after each hearing.</p>
+            <p className="text-sm text-muted">Add the client&apos;s email or phone number on the matter to send updates after each hearing.</p>
           )}
         </fieldset>
 
@@ -178,7 +179,7 @@ export default function OutcomeForm({ event, staff, firmName, clientPhone, clien
             {effects.map((x) => <li key={x}>{x}</li>)}
           </ul>
         </section>
-        {notify && clientPhone && (
+        {notify && contact && (
           <section className="card p-4">
             <p className="label-caps mb-2 text-accent-ink">Client message preview</p>
             <div className="rounded-[4px_14px_14px_14px] bg-accent-soft px-4 py-3 text-sm">{message}</div>
