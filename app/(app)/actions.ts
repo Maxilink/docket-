@@ -325,3 +325,29 @@ export async function regenerateJoinCode(): Promise<ActionResult & { code?: stri
   revalidatePath('/team');
   return { code: data as string };
 }
+
+// ---------- Documents ----------
+/** Deletes a case document and its file. The database only lets the uploader, partners and admins do this. */
+export async function deleteDocument(id: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('documents').delete().eq('id', id).select('storage_path');
+  if (error) return { error: friendly(error.message) };
+  const row = (data ?? [])[0] as { storage_path: string } | undefined;
+  if (!row) return { error: 'Only the person who uploaded it, a partner or an admin can delete this document.' };
+  try {
+    await createAdminClient().storage.from('matter-docs').remove([row.storage_path]);
+  } catch {
+    // The record is gone; a leftover file is harmless and private.
+  }
+  return {};
+}
+
+/** Turns the 7am list of today's matters on or off for the signed-in person. */
+export async function setMorningList(on: boolean): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Please sign in again.' };
+  const { error } = await supabase.from('profiles').update({ morning_list: on }).eq('id', user.id);
+  if (error) return { error: /morning_list/.test(error.message) ? 'Run update 005 in Supabase first.' : friendly(error.message) };
+  return {};
+}
