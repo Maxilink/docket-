@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { EVENT_TYPES, OUTCOME_LABEL } from '@/lib/constants';
+import { EVENT_TYPES, OUTCOME_LABEL, typeName } from '@/lib/constants';
 import { MONTHS, fmtDateLong, fmtTime, ymd, addDays, parts } from '@/lib/time';
 import type { DiaryEvent, EventType } from '@/lib/types';
 
@@ -109,7 +109,16 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
                   onMouseLeave={() => setTip(null)}
                   className={`relative flex min-h-[64px] min-w-0 flex-col gap-1 border-line p-1.5 text-left sm:min-h-[112px] ${i % 7 !== 6 ? 'border-r' : ''} ${i < visibleCells.length - 7 ? 'border-b' : ''} group transition-colors duration-150 ${c.inMonth ? 'bg-white hover:bg-primary-50' : 'bg-canvas text-muted/70 hover:bg-primary-50/60'} ${isSel ? 'z-[1] ring-2 ring-inset ring-primary' : ''}`}
                 >
-                  <span className={`tabular grid h-7 w-7 place-items-center rounded-full text-[13px] transition-transform duration-150 group-hover:scale-110 ${isToday ? 'bg-gradient-to-br from-accent-300 to-accent font-bold text-primary shadow-glow' : 'font-medium group-hover:bg-white'}`}>{c.day}</span>
+                  <span className="relative w-fit">
+                    <span className={`tabular grid h-7 w-7 place-items-center rounded-full text-[13px] transition-transform duration-150 group-hover:scale-110 ${isToday ? 'bg-gradient-to-br from-accent-300 to-accent font-bold text-primary shadow-glow' : 'font-medium group-hover:bg-white'}`}>{c.day}</span>
+                    {list.length > 0 && (
+                      // Hotspot: purple for today and upcoming days, faded orange for past days.
+                      <span
+                        aria-hidden="true"
+                        className={`absolute -right-1 -top-0.5 h-3 w-3 rounded-full ring-2 ring-white ${c.key >= today ? 'bg-primary-600 shadow-[0_0_0_3px_rgba(91,27,184,0.18)]' : 'bg-[#F59E0B] opacity-50'}`}
+                      />
+                    )}
+                  </span>
                   <span className="hidden flex-col gap-1 sm:flex">
                     {list.slice(0, 3).map((e) => (
                       <span key={e.id} className={`truncate rounded-md px-1.5 py-0.5 text-xs font-semibold transition hover:brightness-95 ${EVENT_TYPES[e.type].bg} ${EVENT_TYPES[e.type].text} ${e.outcome ? 'opacity-60' : ''}`}>
@@ -118,11 +127,6 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
                     ))}
                     {list.length > 3 && <span className="pl-1 text-[11px] text-muted">+{list.length - 3} more</span>}
                   </span>
-                  {list.length > 0 && (
-                    <span className="flex flex-wrap gap-1 pl-1 sm:hidden">
-                      {list.slice(0, 4).map((e) => <i key={e.id} className={`block h-1.5 w-1.5 rounded-full ${EVENT_TYPES[e.type].dot}`} />)}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -144,7 +148,7 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
               {selList.map((e) => (
                 <li key={e.id}>
                   <Link href={`/events/${e.id}`} className={`my-1 flex flex-col gap-0.5 rounded-xl border-l-[3px] px-3 py-2.5 transition duration-200 hover:translate-x-1 hover:bg-primary-50 hover:shadow-sm ${EVENT_TYPES[e.type].border}`}>
-                    <span className={`label-caps ${EVENT_TYPES[e.type].text}`}>{EVENT_TYPES[e.type].label} · {fmtTime(new Date(e.starts_at))}</span>
+                    <span className={`label-caps ${EVENT_TYPES[e.type].text}`}>{typeName(e)} · {fmtTime(new Date(e.starts_at))}</span>
                     <span className="font-semibold leading-snug">{e.title}</span>
                     {e.matter?.suit_number && <span className="font-mono text-[13px] text-primary-600">{e.matter.suit_number}</span>}
                     <span className="text-[13px] text-muted">{[[e.court, e.courtroom].filter(Boolean).join(', '), lawyer(e.lawyer_id)].filter(Boolean).join(' · ')}</span>
@@ -160,23 +164,27 @@ export default function CalendarView({ year, month, gridStart, today, initialSel
       {tip && tipList.length > 0 && (
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-40 w-[300px] rounded-2xl border border-primary-200 bg-white/95 p-3 text-[13px] shadow-lift backdrop-blur"
+          className="pointer-events-none fixed z-40 w-[300px] rounded-2xl bg-primary p-3 text-[13px] text-white shadow-[0_20px_40px_-16px_rgba(46,5,98,0.7)]"
           style={{ left: tip.x, top: tip.y, transform: tip.above ? 'translateY(-100%)' : undefined }}
         >
-          <p className="label-caps mb-1.5 text-muted">{fmtDateLong(new Date(`${tip.key}T12:00:00+01:00`))}</p>
+          <p className="label-caps mb-1.5 text-primary-200">{fmtDateLong(new Date(`${tip.key}T12:00:00+01:00`))}</p>
           {tipList.slice(0, 5).map((e) => (
-            <div key={e.id} className="grid grid-cols-[60px_minmax(0,1fr)] gap-2 border-t border-line/70 py-1.5 first-of-type:border-t-0">
-              <span className={`tabular font-semibold ${EVENT_TYPES[e.type].text}`}>{fmtTime(new Date(e.starts_at))}</span>
+            <div key={e.id} className="grid grid-cols-[60px_minmax(0,1fr)] gap-2 border-t border-white/15 py-1.5 first-of-type:border-t-0">
+              <span className="tabular font-semibold text-accent">{fmtTime(new Date(e.starts_at))}</span>
               <span className="min-w-0">
                 <span className="block font-semibold leading-snug">{e.title}</span>
-                <span className="block text-muted">{[EVENT_TYPES[e.type].label, e.matter?.suit_number, e.court, lawyer(e.lawyer_id)].filter(Boolean).join(' · ')}</span>
+                <span className="block text-primary-100">{[typeName(e), e.matter?.suit_number, e.court, lawyer(e.lawyer_id)].filter(Boolean).join(' · ')}</span>
               </span>
             </div>
           ))}
-          {tipList.length > 5 && <p className="text-muted">+{tipList.length - 5} more. Click the day to see all.</p>}
+          {tipList.length > 5 && <p className="text-primary-100">+{tipList.length - 5} more. Click the day to see all.</p>}
         </div>
       )}
-      <p className="text-xs text-muted">Times are Nigerian time (WAT). Hover a day to preview it; double-click a future day to add an event.</p>
+      <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+        <span className="inline-flex items-center gap-1.5"><i className="block h-2.5 w-2.5 rounded-full bg-primary-600" /> Upcoming events</span>
+        <span className="inline-flex items-center gap-1.5"><i className="block h-2.5 w-2.5 rounded-full bg-[#F59E0B] opacity-50" /> Past events</span>
+        <span>Times are Nigerian time (WAT). Hover a day to preview it; double-click a future day to add an event.</span>
+      </p>
     </>
   );
 }
