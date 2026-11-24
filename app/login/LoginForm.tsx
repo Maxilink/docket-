@@ -3,9 +3,9 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp, sendReset } from './actions';
 
-export default function LoginForm() {
+export default function LoginForm({ initialMode = 'in' }: { initialMode?: 'in' | 'up' }) {
   const router = useRouter();
-  const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [mode, setMode] = useState<'in' | 'up'>(initialMode);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [pending, start] = useTransition();
