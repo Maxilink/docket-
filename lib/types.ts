@@ -1,5 +1,5 @@
 export type Role = 'admin' | 'partner' | 'associate' | 'clerk';
-export type EventType = 'hearing' | 'filing' | 'client' | 'internal';
+export type EventType = 'hearing' | 'filing' | 'client' | 'internal' | 'other';
 export type Outcome = 'adjourned' | 'reserved' | 'judgment' | 'struck_out' | 'settled' | 'held' | 'other';
 
 export interface Firm {
@@ -28,6 +28,7 @@ export interface Matter {
   judge: string | null;
   client_name: string | null;
   client_phone: string | null;
+  client_email?: string | null;
   opposing_counsel: string | null;
   lead_lawyer_id: string | null;
   status: 'active' | 'closed';
@@ -40,6 +41,8 @@ export interface DiaryEvent {
   firm_id: string;
   matter_id: string | null;
   type: EventType;
+  /** What an "Other" event is, in the user's words. */
+  type_label?: string | null;
   title: string;
   starts_at: string;
   purpose: string | null;
@@ -55,7 +58,7 @@ export interface DiaryEvent {
   outcome_recorded_at: string | null;
   next_event_id: string | null;
   created_at: string;
-  matter?: Pick<Matter, 'id' | 'title' | 'suit_number' | 'client_name' | 'client_phone'> | null;
+  matter?: Pick<Matter, 'id' | 'title' | 'suit_number' | 'client_name' | 'client_phone' | 'client_email'> | null;
 }
 
 export interface ActionResult {

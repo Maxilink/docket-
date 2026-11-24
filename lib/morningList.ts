@@ -2,6 +2,7 @@ import 'server-only';
 import type { createAdminClient } from '@/lib/supabase/admin';
 import { sendMessage } from '@/lib/termii';
 import { sendPushToUser } from '@/lib/push';
+import { appUrl, cleanEmail, sendEmail } from '@/lib/email';
 import { normalisePhone } from '@/lib/phone';
 import { addDays, fmtTime, parts, startOfDay, WEEKDAYS, MONTHS, ymd } from '@/lib/time';
 
@@ -19,7 +20,7 @@ export interface MorningItem {
   openItems: number;
 }
 
-const TYPE_WORD: Record<string, string> = { hearing: '', filing: 'File: ', client: 'Client: ', internal: 'Meeting: ' };
+const TYPE_WORD: Record<string, string> = { hearing: '', filing: 'File: ', client: 'Client: ', internal: 'Meeting: ', other: '' };
 
 function firstName(name: string) {
   return name.replace(/^(barr\.?|barrister|mr\.?|mrs\.?|ms\.?|dr\.?|chief)\s+/i, '').trim().split(/\s+/)[0] || '';
@@ -57,10 +58,10 @@ interface Row {
 }
 
 /**
- * Sends each lawyer one message with today's matters, by SMS/WhatsApp and push.
+ * Sends each lawyer one message with today's matters, by email, SMS/WhatsApp and push.
  * Only people with something in the diary today get one, and only those who haven't turned it off.
  */
-export async function runMorningList(admin: ReturnType<typeof createAdminClient>, opts: { sms: boolean; push: boolean }, now = new Date()) {
+export async function runMorningList(admin: ReturnType<typeof createAdminClient>, opts: { sms: boolean; push: boolean; email?: boolean }, now = new Date()) {
   const h = parts(now).h;
   if (h < MORNING_FROM_HOUR || h >= MORNING_UNTIL_HOUR) return { skipped: 'outside 7–10am' };
 
@@ -101,6 +102,12 @@ export async function runMorningList(admin: ReturnType<typeof createAdminClient>
     pushUsers = new Set((subs ?? []).map((s) => s.user_id as string));
   }
 
+  const emails = new Map<string, string>();
+  if (opts.email && byLawyer.size) {
+    const { data: rows } = await admin.rpc('member_emails', { p_ids: Array.from(byLawyer.keys()) });
+    for (const r of (rows ?? []) as { id: string; email: string }[]) emails.set(r.id, r.email);
+  }
+
   const day = ymd(now);
   let sent = 0;
   let failed = 0;
@@ -117,6 +124,25 @@ export async function runMorningList(admin: ReturnType<typeof createAdminClient>
     }));
     const text = morningText(lawyer.full_name, now, items);
     const channels: { channel: string; send: () => Promise<{ ok: boolean; detail: string }> }[] = [];
+    const to = cleanEmail(emails.get(userId));
+    if (opts.email && to) {
+      // The email has room for the whole day, not just the first 5 items.
+      const full = morningText(lawyer.full_name, now, items, 50);
+      const link = appUrl('/today');
+      channels.push({
+        channel: 'email',
+        send: async () => {
+          const r = await sendEmail({
+            to,
+            subject: `Today: ${list.length} item${list.length === 1 ? '' : 's'} in your diary`,
+            text: full.replace(/:\n/, ':\n\n'),
+            link: link ? { href: link, label: 'Open today in C-Diary' } : undefined,
+            footer: 'Your C-Diary morning list. You can turn it off under Account.',
+          });
+          return { ok: r.ok, detail: r.detail };
+        },
+      });
+    }
     const phone = normalisePhone(lawyer.phone);
     if (opts.sms && phone) channels.push({ channel: 'sms', send: async () => { const r = await sendMessage(phone, text); return { ok: r.ok, detail: r.detail }; } });
     if (opts.push && pushUsers.has(userId)) {

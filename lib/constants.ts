@@ -7,7 +7,13 @@ export const EVENT_TYPES: Record<EventType, { label: string; text: string; bg: s
   filing: { label: 'Filing deadline', text: 'text-filing', bg: 'bg-filing-soft', border: 'border-filing', dot: 'bg-filing' },
   client: { label: 'Client meeting', text: 'text-client', bg: 'bg-client-soft', border: 'border-client', dot: 'bg-client' },
   internal: { label: 'Internal meeting', text: 'text-internal', bg: 'bg-internal-soft', border: 'border-internal', dot: 'bg-internal' },
+  other: { label: 'Other', text: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-400', dot: 'bg-primary-400' },
 };
+
+/** The name to show for an event's type: an "Other" event shows what the user typed. */
+export function typeName(e: { type: EventType; type_label?: string | null }) {
+  return e.type === 'other' && e.type_label ? e.type_label : EVENT_TYPES[e.type].label;
+}
 
 export const OUTCOMES: { value: Outcome; label: string; needsDate: boolean }[] = [
   { value: 'adjourned', label: 'Adjourned', needsDate: true },
