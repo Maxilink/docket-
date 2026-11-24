@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/today', label: 'Today', icon: 'M3 10.5 12 4l9 6.5V20H3z' },
   { href: '/calendar', label: 'Calendar', icon: 'M4 5h16v15H4zM4 10h16M9 3v4M15 3v4' },
   { href: '/matters', label: 'Matters', icon: 'M5 4h9l5 5v11H5zM14 4v5h5' },
+  { href: '/deadlines', label: 'Deadlines', icon: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' },
   { href: '/cause-list', label: 'Cause list', icon: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01' },
   { href: '/messages', label: 'Messages', icon: 'M4 5h16v11H9l-5 4z' },
   { href: '/team', label: 'Team', icon: 'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6' },

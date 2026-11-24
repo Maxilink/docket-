@@ -10,7 +10,7 @@ interface Props {
   event?: DiaryEvent;
   matters: Pick<Matter, 'id' | 'title' | 'suit_number' | 'court' | 'courtroom' | 'lead_lawyer_id' | 'client_phone' | 'client_email'>[];
   staff: Profile[];
-  defaults: { date: string; time: string; matterId?: string; lawyerId: string };
+  defaults: { date: string; time: string; matterId?: string; lawyerId: string; type?: EventType; purpose?: string; notes?: string; title?: string };
   minDate: string;
 }
 
@@ -18,10 +18,10 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
   const router = useRouter();
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
-  const [type, setType] = useState<EventType>(event?.type ?? 'hearing');
+  const [type, setType] = useState<EventType>(event?.type ?? defaults.type ?? 'hearing');
   const [matterId, setMatterId] = useState(event?.matter_id ?? defaults.matterId ?? '');
   const matter = matters.find((m) => m.id === matterId);
-  const [title, setTitle] = useState(event?.title ?? matter?.title ?? '');
+  const [title, setTitle] = useState(event?.title ?? matter?.title ?? defaults.title ?? '');
   const [court, setCourt] = useState(event?.court ?? matter?.court ?? '');
   const [courtroom, setCourtroom] = useState(event?.courtroom ?? matter?.courtroom ?? '');
   const [lawyerId, setLawyerId] = useState(event?.lawyer_id ?? matter?.lead_lawyer_id ?? defaults.lawyerId);
@@ -93,7 +93,7 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
         {showCourt && (
           <>
             <label className="field" htmlFor="purpose">{type === 'filing' ? 'What to file' : 'Fixed for'}
-              <input id="purpose" name="purpose" className="input" list="purposes" defaultValue={event?.purpose ?? ''} placeholder={type === 'filing' ? 'e.g. Reply to statement of defence' : 'e.g. Continuation of hearing'} />
+              <input id="purpose" name="purpose" className="input" list="purposes" defaultValue={event?.purpose ?? defaults.purpose ?? ''} placeholder={type === 'filing' ? 'e.g. Reply to statement of defence' : 'e.g. Continuation of hearing'} />
               <datalist id="purposes">{PURPOSES.map((p) => <option key={p} value={p} />)}</datalist>
             </label>
             <label className="field" htmlFor="lawyer_id">Counsel
@@ -123,7 +123,7 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
       <ClashWarning clashes={clashes} staff={staff} lawyerId={lawyerId} />
 
       <label className="field" htmlFor="notes">Notes and documents to bring
-        <textarea id="notes" name="notes" rows={3} className="input py-2" defaultValue={event?.notes ?? ''} placeholder="Witness statements, certified true copies, list of authorities…" />
+        <textarea id="notes" name="notes" rows={3} className="input py-2" defaultValue={event?.notes ?? defaults.notes ?? ''} placeholder="Witness statements, certified true copies, list of authorities…" />
       </label>
 
       <fieldset className="flex flex-col gap-2">
