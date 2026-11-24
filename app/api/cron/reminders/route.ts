@@ -5,6 +5,7 @@ import { pushConfigured, sendPushToUser } from '@/lib/push';
 import { normalisePhone } from '@/lib/phone';
 import { clientReminderText, lawyerReminderText } from '@/lib/messages';
 import { fmtTime, isQuietHours } from '@/lib/time';
+import { runMorningList } from '@/lib/morningList';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -47,6 +48,7 @@ async function pool<T>(items: T[], size: number, fn: (item: T) => Promise<void>)
  *  - counsel: SMS/WhatsApp and a push notification about a day before, and again within the last hour
  *  - client (if ticked): an SMS/WhatsApp about a day before
  * Nothing automatic goes out between 8pm and 7am; held messages go out at 7am if still due.
+ * Between 7 and 10am it also sends each lawyer their morning list of today's matters (lib/morningList.ts).
  * Each message is claimed in reminder_log before sending, per hearing date, so a rescheduled hearing gets
  * fresh reminders and nothing is sent twice. Failed messages are retried up to 3 times.
  */
@@ -155,7 +157,15 @@ async function run(request: NextRequest) {
     if (res.ok) sent++; else failed++;
   });
 
-  return NextResponse.json({ ok: true, checked: events.length, sent, failed, skipped });
+  // Between 7 and 10am: each lawyer's list of today's matters, once a day.
+  let morning: unknown = null;
+  try {
+    morning = await runMorningList(admin, { sms, push });
+  } catch (e) {
+    morning = { error: e instanceof Error ? e.message : 'failed' };
+  }
+
+  return NextResponse.json({ ok: true, checked: events.length, sent, failed, skipped, morning });
 }
 
 export async function POST(request: NextRequest) {
