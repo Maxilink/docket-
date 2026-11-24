@@ -154,3 +154,11 @@ Between step 1 and step 3, anyone who uses the join code can't get in (the page 
 1. In Supabase, open **SQL Editor > New query**, paste `supabase/002_messages_and_reminders.sql` and click **Run**.
 2. In Vercel, open the project and go to **Settings > Environment Variables**. Change `NEXT_PUBLIC_APP_NAME` to `C-Diary`.
 3. Upload the changed files to GitHub. Vercel redeploys automatically. Changing an environment variable alone needs a redeploy: **Deployments > ⋯ > Redeploy**.
+
+## Email reminders (Brevo)
+
+1. Run `supabase/006_email_reminders.sql` in the Supabase SQL Editor **before** deploying this update.
+2. In Brevo, verify the address reminders will come from (Senders, domains & dedicated IPs), then create an API key (SMTP & API > API keys).
+3. In Vercel, add `BREVO_API_KEY` (Secret), `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` (e.g. C-Diary) and `NEXT_PUBLIC_SITE_URL` (your app's address), then redeploy.
+
+Counsel get emails at their sign-in address; clients get them at the email saved on the matter. Email goes first, then SMS/WhatsApp. Brevo's free plan sends 300 emails a day.
