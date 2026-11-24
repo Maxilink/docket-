@@ -5,8 +5,12 @@ import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits
 import ArchiveButton from '@/components/ArchiveButton';
 import { canArchive, canTextClients, OUTCOME_LABEL } from '@/lib/constants';
 import RemindClient from '@/components/RemindClient';
+import ChecklistPanel, { type ChecklistItem } from '@/components/ChecklistPanel';
+import DocumentsPanel, { type Doc } from '@/components/DocumentsPanel';
+import { DOC_COLUMNS } from '@/lib/docs';
+import { aiConfigured } from '@/lib/ai';
 import { clientUpcomingText } from '@/lib/messages';
-import { fmtDateLong, fmtTime, startOfDay } from '@/lib/time';
+import { fmtDate, fmtDateLong, fmtTime, startOfDay } from '@/lib/time';
 import type { DiaryEvent } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -29,6 +33,36 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
     const { data: n } = await supabase.from('events').select('id, starts_at, purpose').eq('id', e.next_event_id).maybeSingle();
     nextEvent = (n as NextRef | null) ?? null;
   }
+
+  // Court prep: the checklist, this hearing's documents, and last hearing's list to copy forward.
+  const courtPrep = Boolean(e.matter && (e.type === 'hearing' || e.type === 'filing'));
+  let items: ChecklistItem[] = [];
+  let caseDocs: Doc[] = [];
+  let prepReady = true;
+  let previous: { label: string; items: { label: string; document_id: string | null }[] } | null = null;
+  if (courtPrep && e.matter) {
+    const [itemsRes, docsRes, prevRes] = await Promise.all([
+      supabase.from('hearing_items').select('id, label, document_id, done, done_by, done_at').eq('event_id', e.id).order('created_at'),
+      supabase.from('documents').select(DOC_COLUMNS).eq('matter_id', e.matter.id).order('created_at', { ascending: false }),
+      supabase
+        .from('events')
+        .select('id, starts_at, purpose, items:hearing_items(label, document_id)')
+        .eq('matter_id', e.matter.id)
+        .lt('starts_at', e.starts_at)
+        .order('starts_at', { ascending: false })
+        .limit(1),
+    ]);
+    prepReady = !itemsRes.error && !docsRes.error;
+    items = (itemsRes.data ?? []) as ChecklistItem[];
+    caseDocs = (docsRes.data ?? []) as Doc[];
+    if (caseDocs.length) {
+      const { data: signed } = await supabase.storage.from('matter-docs').createSignedUrls(caseDocs.map((d) => d.storage_path), 3600);
+      caseDocs = caseDocs.map((d) => ({ ...d, url: signed?.find((x) => x.path === d.storage_path)?.signedUrl ?? null }));
+    }
+    const prev = ((prevRes.data ?? [])[0] ?? null) as { starts_at: string; purpose: string | null; items: { label: string; document_id: string | null }[] | null } | null;
+    if (prev?.items?.length) previous = { label: `the ${fmtDate(new Date(prev.starts_at))} hearing`, items: prev.items };
+  }
+  const staffNames = staff.map((x) => ({ id: x.id, name: x.full_name || 'A colleague' }));
 
   const facts: [string, string | null | undefined, boolean?][] = [
     ['Date', fmtDateLong(at)],
@@ -91,6 +125,32 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
           />
         </section>
       )}
+
+      {courtPrep && e.matter && (prepReady ? (
+        <>
+          <ChecklistPanel
+            eventId={e.id}
+            initial={items}
+            docs={caseDocs.map((d) => ({ id: d.id, name: d.name, url: d.url ?? null }))}
+            staff={staffNames}
+            previous={previous}
+            readOnly={Boolean(e.outcome)}
+          />
+          <DocumentsPanel
+            title="Documents for this hearing"
+            eventId={e.id}
+            firmId={firm.id}
+            matterId={e.matter.id}
+            me={profile.id}
+            canManageAll={canArchive(profile.role)}
+            aiReady={aiConfigured()}
+            staff={staffNames}
+            initial={caseDocs.filter((d) => d.event_id === e.id)}
+          />
+        </>
+      ) : (
+        <p className="rounded-xl bg-warn-soft px-4 py-3 text-sm text-warn">The court checklist and hearing documents aren&apos;t switched on yet. Run updates 004 and 005 in Supabase, then reload.</p>
+      ))}
 
       <section className="card p-5">
         <dl className="grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-[160px_minmax(0,1fr)]">
