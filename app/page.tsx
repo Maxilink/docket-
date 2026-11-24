@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 export const metadata: Metadata = {
   title: { absolute: 'C-Diary: the court diary for Nigerian law firms' },
   description:
-    'Hearings, adjournments, filing deadlines and reminders for your whole chambers. Record what happened in court, fix the next date, and remind counsel and clients by SMS and WhatsApp.',
+    'Hearings, adjournments, filing deadlines and reminders for your whole chambers. Record what happened in court, fix the next date, and remind counsel and clients by email, SMS and WhatsApp.',
 };
 
 export const dynamic = 'force-dynamic';
@@ -38,8 +38,8 @@ const ROLES = [
     tab: 'For counsel',
     title: 'Walk into court knowing exactly what’s on',
     points: [
-      'Your hearings for the day by WhatsApp at 7am, with anything not yet packed',
-      'Reminders a day before and within the hour, by SMS, WhatsApp or phone notification',
+      'Your hearings for the day by email and WhatsApp at 7am, with anything not yet packed',
+      'Reminders a day before and within the hour, by email, SMS, WhatsApp or phone notification',
       'Record the outcome and fix the next date in one step',
       'AI summaries of processes, rulings and written addresses',
     ],
@@ -53,7 +53,7 @@ const ROLES = [
       'A shared month calendar, with a preview of each day on hover',
       'A printable weekly cause list for the noticeboard',
       'A bring-to-court checklist on every hearing',
-      'Clients reminded of their dates by SMS the day before',
+      'Clients reminded of their dates by email and SMS the day before',
     ],
     shot: { src: '/landing/calendar.jpg', alt: 'The C-Diary calendar for November, with a hover preview of a court hearing on Friday 13 November' },
   },
@@ -73,7 +73,7 @@ const ROLES = [
 
 const FEATURES = [
   { title: 'Firm calendar', body: 'Month view with hover previews, filters by type, and the whole firm or just your matters.', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z' },
-  { title: 'Reminders that reach people', body: 'SMS and WhatsApp through Termii, including the DND route, plus phone notifications and an alarm sound.', icon: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0' },
+  { title: 'Reminders that reach people', body: 'Email first, then SMS and WhatsApp through Termii (including the DND route), plus phone notifications and an alarm sound.', icon: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0' },
   { title: 'Printable cause list', body: 'A clean weekly list for the noticeboard, with each hearing’s readiness.', icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01' },
   { title: 'Documents and AI summaries', body: 'Every process and exhibit filed under its matter and hearing, with a one-click summary.', icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M9 13h6M9 17h4' },
   { title: 'Team messages', body: 'A discussion for every matter, a firm-wide channel and direct messages. Clients never see them.', icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
@@ -84,7 +84,7 @@ const LOCAL = [
   { title: 'Times in WAT', body: 'Every date and reminder runs on Lagos time.' },
   { title: 'Suit numbers and courts', body: 'Matters carry suit numbers, courts and courtrooms.' },
   { title: 'DND-safe SMS', body: 'Reminders still reach lines with Do Not Disturb on.' },
-  { title: 'WhatsApp first', body: 'The morning list arrives where your team already reads.' },
+  { title: 'Email and WhatsApp', body: 'The morning list lands in the inbox and on WhatsApp, where your team already reads.' },
 ];
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {
@@ -171,7 +171,7 @@ export default async function Landing() {
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/80">
             Hearings, filing deadlines and next dates for your whole chambers in one diary. Record what happened in court,
-            fix the next date in one step, and let counsel and clients be reminded by SMS and WhatsApp.
+            fix the next date in one step, and let counsel and clients be reminded by email, SMS and WhatsApp.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href={cta.href} className="rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-primary shadow-[0_12px_30px_-12px_rgba(14,206,212,.8)] transition hover:-translate-y-0.5 hover:bg-accent-300">{cta.label}</Link>
