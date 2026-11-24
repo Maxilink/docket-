@@ -2,10 +2,13 @@ import Link from 'next/link';
 import { requireMember, getStaff } from '@/lib/session';
 import EventForm from '@/components/EventForm';
 import { ymd } from '@/lib/time';
+import type { EventType } from '@/lib/types';
+
+const TYPES: EventType[] = ['hearing', 'filing', 'client', 'internal', 'other'];
 
 export const metadata = { title: 'New event' };
 
-export default async function NewEventPage(props: { searchParams: Promise<{ date?: string; matter?: string }> }) {
+export default async function NewEventPage(props: { searchParams: Promise<{ date?: string; matter?: string; type?: string; purpose?: string; notes?: string; title?: string; time?: string }> }) {
   const searchParams = await props.searchParams;
   const { supabase, profile } = await requireMember();
   const [staff, { data: matters }] = await Promise.all([
@@ -22,7 +25,16 @@ export default async function NewEventPage(props: { searchParams: Promise<{ date
         matters={matters ?? []}
         staff={staff}
         minDate={today}
-        defaults={{ date, time: '09:00', matterId: searchParams.matter, lawyerId: profile.id }}
+        defaults={{
+          date,
+          time: searchParams.time && /^\d{2}:\d{2}$/.test(searchParams.time) ? searchParams.time : '09:00',
+          matterId: searchParams.matter,
+          lawyerId: profile.id,
+          type: TYPES.includes(searchParams.type as EventType) ? (searchParams.type as EventType) : undefined,
+          purpose: searchParams.purpose?.slice(0, 200),
+          notes: searchParams.notes?.slice(0, 2000),
+          title: searchParams.title?.slice(0, 200),
+        }}
       />
     </div>
   );
