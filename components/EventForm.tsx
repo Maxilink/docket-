@@ -8,7 +8,7 @@ import type { DiaryEvent, EventType, Matter, Profile } from '@/lib/types';
 
 interface Props {
   event?: DiaryEvent;
-  matters: Pick<Matter, 'id' | 'title' | 'suit_number' | 'court' | 'courtroom' | 'lead_lawyer_id' | 'client_phone'>[];
+  matters: Pick<Matter, 'id' | 'title' | 'suit_number' | 'court' | 'courtroom' | 'lead_lawyer_id' | 'client_phone' | 'client_email'>[];
   staff: Profile[];
   defaults: { date: string; time: string; matterId?: string; lawyerId: string };
   minDate: string;
@@ -57,7 +57,7 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
       {event && <input type="hidden" name="id" value={event.id} />}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium text-muted">Type</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {(Object.keys(EVENT_TYPES) as EventType[]).map((t) => (
             <label key={t} className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm ${type === t ? `${EVENT_TYPES[t].border} ${EVENT_TYPES[t].bg} ${EVENT_TYPES[t].text} font-semibold` : 'border-line'}`}>
               <input type="radio" name="type" value={t} checked={type === t} onChange={() => setType(t)} className="accent-primary" />
@@ -65,6 +65,11 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
             </label>
           ))}
         </div>
+        {type === 'other' && (
+          <label className="field mt-2" htmlFor="type_label">What kind of event?
+            <input id="type_label" name="type_label" className="input" defaultValue={event?.type_label ?? ''} maxLength={60} required placeholder="e.g. Arbitration, Site visit, Mediation" />
+          </label>
+        )}
       </fieldset>
 
       <label className="field" htmlFor="matter_id">Matter
@@ -126,8 +131,8 @@ export default function EventForm({ event, matters, staff, defaults, minDate }: 
         <label className="flex items-center gap-2"><input type="checkbox" name="remind_day" defaultChecked={event?.remind_day ?? true} className="h-5 w-5 accent-primary" /> Remind counsel 1 day before</label>
         <label className="flex items-center gap-2"><input type="checkbox" name="remind_hour" defaultChecked={event?.remind_hour ?? true} className="h-5 w-5 accent-primary" /> Remind counsel 1 hour before</label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" name="remind_client" defaultChecked={event?.remind_client ?? false} disabled={!matter?.client_phone} className="h-5 w-5 accent-primary" />
-          Remind the client 1 day before{!matter?.client_phone && <span className="text-sm text-muted">(add a client phone on the matter first)</span>}
+          <input type="checkbox" name="remind_client" defaultChecked={event?.remind_client ?? false} disabled={!matter?.client_phone && !matter?.client_email} className="h-5 w-5 accent-primary" />
+          Remind the client 1 day before{!matter?.client_phone && !matter?.client_email && <span className="text-sm text-muted">(add a client email or phone on the matter first)</span>}
         </label>
       </fieldset>
 

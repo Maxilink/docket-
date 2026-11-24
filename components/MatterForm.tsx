@@ -54,7 +54,10 @@ export default function MatterForm({ matter, staff, defaultLawyer }: { matter?: 
         <label className="field" htmlFor="client_name">Client
           <input id="client_name" name="client_name" className="input" defaultValue={v('client_name')} placeholder="e.g. Mr. Chinedu Okafor" />
         </label>
-        <label className="field" htmlFor="client_phone">Client phone (for updates)
+        <label className="field" htmlFor="client_email">Client email (for reminders and updates)
+          <input id="client_email" name="client_email" type="email" className="input" defaultValue={matter?.client_email ?? ''} placeholder="name@example.com" inputMode="email" autoComplete="off" />
+        </label>
+        <label className="field" htmlFor="client_phone">Client phone (for SMS and WhatsApp)
           <input id="client_phone" name="client_phone" className="input" defaultValue={matter?.client_phone ? `+${matter.client_phone}` : ''} placeholder="0803 123 4567" inputMode="tel" />
         </label>
       </div>

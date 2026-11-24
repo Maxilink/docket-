@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { EVENT_TYPES } from '@/lib/constants';
+import { EVENT_TYPES, typeName } from '@/lib/constants';
 import { fmtDateLong, fmtTime } from '@/lib/time';
 import type { EventType } from '@/lib/types';
 
@@ -10,6 +10,7 @@ interface Upcoming {
   id: string;
   title: string;
   type: EventType;
+  type_label?: string | null;
   starts_at: string;
   court: string | null;
   remind_day: boolean;
@@ -36,7 +37,7 @@ export default function AlarmWatcher({ userId }: { userId: string }) {
     const until = new Date(now.getTime() + 25 * 3600 * 1000);
     const { data } = await supabase
       .from('events')
-      .select('id, title, type, starts_at, court, remind_day, remind_hour')
+      .select('id, title, type, type_label, starts_at, court, remind_day, remind_hour')
       .eq('lawyer_id', userId)
       .is('outcome', null)
       .gt('starts_at', now.toISOString())
@@ -132,7 +133,7 @@ export default function AlarmWatcher({ userId }: { userId: string }) {
         <div key={d.key} role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hearing bg-hearing-soft px-4 py-3">
           <div className="min-w-0">
             <p className="font-semibold text-hearing">
-              {d.kind === 'hour' ? 'Within the hour' : 'Tomorrow'}: {EVENT_TYPES[d.ev.type].label}
+              {d.kind === 'hour' ? 'Within the hour' : 'Tomorrow'}: {typeName(d.ev)}
             </p>
             <p className="text-sm">
               {d.ev.title} · {fmtDateLong(new Date(d.ev.starts_at))} at {fmtTime(new Date(d.ev.starts_at))}

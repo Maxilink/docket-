@@ -1,12 +1,13 @@
 import Link from 'next/link';
-import { EVENT_TYPES, OUTCOME_LABEL } from '@/lib/constants';
+import { EVENT_TYPES, OUTCOME_LABEL, typeName } from '@/lib/constants';
+import { clientContact } from '@/lib/contact';
 import { fmtDate, fmtTime, relDay, parts, MONTHS } from '@/lib/time';
 import type { DiaryEvent, Profile } from '@/lib/types';
 import RemindClient from '@/components/RemindClient';
 import { clientUpcomingText } from '@/lib/messages';
 
-export function TypeTag({ type }: { type: DiaryEvent['type'] }) {
-  return <span className={`label-caps ${EVENT_TYPES[type].text}`}>{EVENT_TYPES[type].label}</span>;
+export function TypeTag({ type, label }: { type: DiaryEvent['type']; label?: string | null }) {
+  return <span className={`label-caps ${EVENT_TYPES[type].text}`}>{typeName({ type, type_label: label })}</span>;
 }
 
 export function Pill({ tone, children }: { tone: 'warn' | 'neutral' | 'good' | 'danger'; children: React.ReactNode }) {
@@ -34,7 +35,7 @@ export function EventRow({ e, staff, showDate = false, now = new Date(), firmNam
   const st = eventStatus(e, now);
   const needsOutcome = st.label === 'Awaiting outcome';
   const rel = relDay(d, now);
-  const canRemind = Boolean(firmName && !e.outcome && d > now && e.matter?.client_phone && (e.type === 'hearing' || e.type === 'client'));
+  const canRemind = Boolean(firmName && !e.outcome && d > now && (e.matter?.client_email || e.matter?.client_phone) && (e.type === 'hearing' || e.type === 'client'));
   return (
     <li className={`row-hover grid grid-cols-[64px_minmax(0,1fr)] gap-4 border-b border-line/70 px-5 py-4 last:border-b-0 sm:grid-cols-[72px_minmax(0,1fr)_auto]`}>
       <div className="tabular flex flex-col">
@@ -52,7 +53,7 @@ export function EventRow({ e, staff, showDate = false, now = new Date(), firmNam
       </div>
       <div className="flex min-w-0 flex-col gap-0.5">
         <div className="flex flex-wrap items-center gap-2">
-          <TypeTag type={e.type} />
+          <TypeTag type={e.type} label={e.type_label} />
           {showDate && rel && <span className="text-xs font-semibold text-accent-ink">{rel}</span>}
         </div>
         <Link href={`/events/${e.id}`} className="font-semibold leading-snug hover:underline">{e.title}</Link>
@@ -77,7 +78,7 @@ export function EventRow({ e, staff, showDate = false, now = new Date(), firmNam
             compact
             eventId={e.id}
             clientName={e.matter?.client_name ?? null}
-            clientPhone={e.matter!.client_phone!}
+            contact={clientContact(e.matter)!}
             defaultText={clientUpcomingText(firmName!, e.matter?.client_name ?? null, d, [e.court, e.courtroom].filter(Boolean).join(', '), e.purpose, e.matter?.suit_number ?? null)}
           />
         </div>
@@ -114,4 +115,4 @@ export function SectionCard({ title, aside, children, tone = 'plain' }: { title:
   );
 }
 
-export const EVENT_SELECT = 'id, firm_id, matter_id, type, title, starts_at, purpose, court, courtroom, lawyer_id, notes, remind_day, remind_hour, remind_client, outcome, outcome_note, outcome_recorded_at, next_event_id, created_at, matter:matters(id, title, suit_number, client_name, client_phone)';
+export const EVENT_SELECT = 'id, firm_id, matter_id, type, type_label, title, starts_at, purpose, court, courtroom, lawyer_id, notes, remind_day, remind_hour, remind_client, outcome, outcome_note, outcome_recorded_at, next_event_id, created_at, matter:matters(id, title, suit_number, client_name, client_phone, client_email)';

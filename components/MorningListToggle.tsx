@@ -14,7 +14,7 @@ export default function MorningListToggle({ initial, hasPhone }: { initial: bool
         <h2 className="font-display text-xl font-bold tracking-tight">Morning cause list</h2>
         <p className="text-sm text-muted">
           At 7am on days you have something in the diary, get one message listing today&apos;s hearings, deadlines and meetings, with any
-          &ldquo;bring to court&rdquo; items not ready yet. It comes by SMS or WhatsApp{hasPhone ? '' : ' (add your phone number above)'} and as a phone notification if they&apos;re on.
+          &ldquo;bring to court&rdquo; items not ready yet. It comes by email, by SMS or WhatsApp{hasPhone ? '' : ' (add your phone number above)'}, and as a phone notification if they&apos;re on.
         </p>
         {error && <p role="alert" className="mt-2 text-sm text-hearing">{error}</p>}
       </div>
