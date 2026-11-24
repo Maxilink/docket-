@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { clientContact } from '@/lib/contact';
 import { requireMember, getStaff } from '@/lib/session';
 import { EVENT_SELECT, Pill, TypeTag, eventStatus } from '@/components/EventBits';
 import ArchiveButton from '@/components/ArchiveButton';
@@ -81,7 +82,7 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
       <Link href={e.matter ? `/matters/${e.matter.id}` : '/calendar'} className="text-sm text-muted hover:underline">← {e.matter ? e.matter.title : 'Calendar'}</Link>
       <header className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <TypeTag type={e.type} />
+          <TypeTag type={e.type} label={e.type_label} />
           <Pill tone={st.tone}>{st.label}</Pill>
         </div>
         <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">{e.title}</h1>
@@ -111,16 +112,16 @@ export default async function EventPage(props: { params: Promise<{ id: string }>
         </section>
       )}
 
-      {!past && !e.outcome && e.matter?.client_phone && canTextClients(profile.role) && (
+      {!past && !e.outcome && (e.matter?.client_email || e.matter?.client_phone) && canTextClients(profile.role) && (
         <section className="card flex flex-col gap-3 p-5">
           <div>
             <h2 className="font-bold">Remind the client</h2>
-            <p className="text-sm text-muted">{e.matter.client_name || 'Client'} · +{e.matter.client_phone}{e.remind_client ? ' · An automatic reminder also goes out the day before.' : ''}</p>
+            <p className="text-sm text-muted">{e.matter.client_name || 'Client'} · {clientContact(e.matter)}{e.remind_client ? ' · An automatic reminder also goes out the day before.' : ''}</p>
           </div>
           <RemindClient
             eventId={e.id}
             clientName={e.matter.client_name}
-            clientPhone={e.matter.client_phone}
+            contact={clientContact(e.matter)!}
             defaultText={clientUpcomingText(firm.name, e.matter.client_name, at, [e.court, e.courtroom].filter(Boolean).join(', '), e.purpose, e.matter.suit_number)}
           />
         </section>
