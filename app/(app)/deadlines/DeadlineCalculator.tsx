@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { COURTS, SOURCE, findTimeline } from '@/lib/timelines';
 import { computeDeadline, fmtDay, type Closure } from '@/lib/deadlines';
+import DateInput from '@/components/DateInput';
 
 interface Props {
   matters: { id: string; title: string; suit_number: string | null; court: string | null }[];
@@ -83,7 +84,7 @@ export default function DeadlineCalculator({ matters, closures, today, initialMa
 
       {rule?.calc && (
         <label className="field max-w-xs" htmlFor="dl-trigger">{rule.calc.from}
-          <input id="dl-trigger" type="date" className="input" value={trigger} onChange={(e) => setTrigger(e.target.value)} />
+          <DateInput id="dl-trigger" value={trigger} onChange={setTrigger} />
         </label>
       )}
 

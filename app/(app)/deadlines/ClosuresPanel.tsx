@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { fixedHolidays, fmtDay, type Closure } from '@/lib/deadlines';
+import DateInput from '@/components/DateInput';
 
 interface Props {
   closures: (Closure & { id: string; created_by: string | null })[];
@@ -88,12 +89,12 @@ export default function ClosuresPanel({ closures, today, userId, canRemoveAny, n
             <label className="field" htmlFor="cl-label">Name
               <input id="cl-label" className="input" value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} placeholder="e.g. Eid el-Fitr, Christmas vacation" />
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-3 min-[420px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <label className="field" htmlFor="cl-from">First day
-                <input id="cl-from" type="date" className="input" value={from} onChange={(e) => setFrom(e.target.value)} />
+                <DateInput id="cl-from" value={from} onChange={setFrom} placeholder="First day" />
               </label>
               <label className="field" htmlFor="cl-to">Last day
-                <input id="cl-to" type="date" className="input" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+                <DateInput id="cl-to" value={to} min={from || undefined} onChange={setTo} placeholder="Same as first day" />
               </label>
             </div>
             <fieldset className="flex flex-col gap-1.5">
