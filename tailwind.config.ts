@@ -24,8 +24,8 @@ const config: Config = {
         glow: '0 8px 24px -8px rgba(14, 206, 212, 0.55)',
       },
       fontFamily: {
-        display: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        display: ['Nunito', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        sans: ['Geist', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'Menlo', 'monospace'],
       },
     },
