@@ -6,7 +6,7 @@
   html { -webkit-text-size-adjust: 100%; }
   body {
     @apply bg-canvas text-ink font-sans antialiased;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.5;
     /* Soft purple and cyan wash at the top of every page */
     background-image:
@@ -38,9 +38,34 @@
   .row-hover { @apply transition-colors duration-150 hover:bg-primary-50; }
   .field { @apply flex flex-col gap-1.5 text-sm font-medium text-muted min-w-0; }
   .input {
-    @apply w-full rounded-xl border border-line bg-canvas px-3 text-[15px] font-normal text-ink transition
+    @apply w-full rounded-xl border border-line bg-canvas px-3.5 font-normal text-ink transition
       hover:border-primary-200 focus:border-accent-ink focus:bg-white focus:outline-none focus:ring-4 focus:ring-accent/15;
-    min-height: 44px;
+    /* 16px stops iPhones zooming in when a field is tapped */
+    font-size: 16px;
+    min-height: 48px;
+    min-width: 0;
+  }
+  /* iPhone Safari shrinks empty date and time fields and shows no placeholder: keep them full size. */
+  input[type='date'].input,
+  input[type='time'].input,
+  select.input {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    line-height: 46px;
+  }
+  select.input {
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232E0562' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+  }
+  input[type='date'].input::-webkit-date-and-time-value,
+  input[type='time'].input::-webkit-date-and-time-value { text-align: left; }
+  textarea.input { line-height: 1.5; }
+  /* DateInput draws its own calendar icon; the browser's invisible picker button sits on top of it. */
+  input.date-pretty::-webkit-calendar-picker-indicator {
+    opacity: 0; position: absolute; right: 0.75rem; width: 1.5rem; height: 1.5rem; cursor: pointer;
   }
   .label-caps { @apply text-[11px] font-semibold uppercase tracking-[0.1em]; }
   .tabular { font-variant-numeric: tabular-nums; }

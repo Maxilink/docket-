@@ -11,16 +11,10 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic';
 
-/*
-  Titles use BR Sonoma. It is a licensed font, so it is not bundled here:
-  put the .woff2 files from your licence in public/fonts/ with the names below.
-  Until then, titles fall back to Plus Jakarta Sans. Body text uses the system font.
-*/
+/* Titles use Nunito and body text uses Geist; both load from Google Fonts in app/layout.tsx. */
 const PAGE_CSS = `
-@font-face{font-family:'BR Sonoma';src:local('BR Sonoma SemiBold'),local('BRSonoma-SemiBold'),url('/fonts/BRSonoma-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
-@font-face{font-family:'BR Sonoma';src:local('BR Sonoma Bold'),local('BRSonoma-Bold'),url('/fonts/BRSonoma-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
-.lp{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
-.lp-title{font-family:'BR Sonoma',var(--font-sans,'Plus Jakarta Sans'),system-ui,sans-serif;text-wrap:balance}
+.lp{font-family:Geist,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px}
+.lp-title{font-family:Nunito,system-ui,sans-serif;font-weight:800;text-wrap:balance}
 .lp-hero{background:radial-gradient(1200px 500px at 50% -10%,#5B1BB8 0%,transparent 70%),linear-gradient(180deg,#2E0562 0%,#3A0A7E 100%)}
 .lp-shot{box-shadow:0 40px 80px -30px rgba(20,2,50,.55),0 0 0 1px rgba(255,255,255,.14)}
 @keyframes lpUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
@@ -81,10 +75,10 @@ const FEATURES = [
 ];
 
 const LOCAL = [
-  { title: 'Times in WAT', body: 'Every date and reminder runs on Lagos time.' },
-  { title: 'Suit numbers and courts', body: 'Matters carry suit numbers, courts and courtrooms.' },
-  { title: 'DND-safe SMS', body: 'Reminders still reach lines with Do Not Disturb on.' },
-  { title: 'Email and WhatsApp', body: 'The morning list lands in the inbox and on WhatsApp, where your team already reads.' },
+  { title: 'Times in WAT', body: 'Every date and reminder runs on Lagos time.', icon: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' },
+  { title: 'Suit numbers and courts', body: 'Matters carry suit numbers, courts and courtrooms.', icon: 'M12 3v18M5 21h14M6 7h12M6 7l-3 6a3 3 0 0 0 6 0zM18 7l-3 6a3 3 0 0 0 6 0z' },
+  { title: 'DND-safe SMS', body: 'Reminders still reach lines with Do Not Disturb on.', icon: 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM10 18h4M9 9l2 2 4-4' },
+  { title: 'Email and WhatsApp', body: 'The morning list lands in the inbox and on WhatsApp, where your team already reads.', icon: 'M4 6h16v12H4zM4 7l8 6 8-6' },
 ];
 
 function Icon({ d, className = '' }: { d: string; className?: string }) {
@@ -169,7 +163,7 @@ export default async function Landing() {
             <span className="block md:whitespace-nowrap">Never miss a court date</span>
             <span className="block text-accent md:whitespace-nowrap">or a filing deadline</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/80">
+          <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-white/80">
             Hearings, filing deadlines and next dates for your whole chambers in one diary. Record what happened in court,
             fix the next date in one step, and let counsel and clients be reminded by email, SMS and WhatsApp.
           </p>
@@ -207,10 +201,13 @@ export default async function Landing() {
         <section aria-labelledby="local" className="py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-8">
             <h2 id="local" className="lp-title text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Made for how Nigerian courts work</h2>
-            <ul className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {LOCAL.map((l) => (
-                <li key={l.title} className="text-center">
-                  <p className="lp-title text-lg font-bold text-ink">{l.title}</p>
+                <li key={l.title} className="flex flex-col items-center rounded-2xl border border-primary-100 bg-white px-5 py-7 text-center shadow-[0_18px_40px_-24px_rgba(46,5,98,.45)]">
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-50 text-primary">
+                    <Icon d={l.icon} className="h-6 w-6" />
+                  </span>
+                  <p className="lp-title mt-4 text-lg text-ink">{l.title}</p>
                   <p className="mt-1 text-muted">{l.body}</p>
                 </li>
               ))}
@@ -223,16 +220,16 @@ export default async function Landing() {
           <div className="mx-auto max-w-6xl px-4 sm:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 id="roles-h" className="lp-title text-3xl font-bold tracking-tight text-primary sm:text-[2.6rem] sm:leading-[1.1]">One diary for everyone in chambers</h2>
-              <p className="mt-3 text-lg text-muted">Counsel, clerks and partners each get the view they need from the same shared diary.</p>
+              <p className="mt-3 text-base text-muted">Counsel, clerks and partners each get the view they need from the same shared diary.</p>
             </div>
 
             <div className="mt-10">
               <input type="radio" name="role" id="role-counsel" className="sr-only" defaultChecked />
               <input type="radio" name="role" id="role-clerks" className="sr-only" />
               <input type="radio" name="role" id="role-partners" className="sr-only" />
-              <div className="lp-tabs mx-auto flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-full bg-white p-1.5 shadow-sm">
+              <div className="lp-tabs mx-auto flex max-w-full flex-wrap justify-center gap-2.5">
                 {ROLES.map((r) => (
-                  <label key={r.id} htmlFor={`role-${r.id}`} className="cursor-pointer rounded-full px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary-50 sm:px-5">
+                  <label key={r.id} htmlFor={`role-${r.id}`} className="cursor-pointer rounded-full bg-primary/[0.07] px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/[0.14] sm:px-5">
                     {r.tab}
                   </label>
                 ))}
@@ -287,7 +284,7 @@ export default async function Landing() {
           <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)] items-center gap-10 px-4 sm:px-8 lg:grid-cols-2">
             <div>
               <h2 id="ai-h" className="lp-title text-3xl font-bold tracking-tight text-primary sm:text-[2.6rem] sm:leading-[1.1]">Read the file before you’ve opened it</h2>
-              <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
                 Upload a writ, a ruling or a 40-page written address, even a phone photo of a served process. The AI summary sets out
                 what it is, who the parties are, the key points, the dates and deadlines, and what to do next. You check it against the
                 document; it saves you the first read.
