@@ -13,7 +13,8 @@ export const dynamic = 'force-dynamic';
 
 /* Titles use Nunito and body text uses Geist; both load from Google Fonts in app/layout.tsx. */
 const PAGE_CSS = `
-.lp{font-family:Geist,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px}
+.lp{font-family:Geist,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px}
+@media (min-width:640px){.lp{font-size:15px}}
 .lp-title{font-family:Nunito,system-ui,sans-serif;font-weight:800;text-wrap:balance}
 .lp-hero{background:radial-gradient(1200px 500px at 50% -10%,#5B1BB8 0%,transparent 70%),linear-gradient(180deg,#2E0562 0%,#3A0A7E 100%)}
 .lp-shot{box-shadow:0 40px 80px -30px rgba(20,2,50,.55),0 0 0 1px rgba(255,255,255,.14)}
@@ -159,11 +160,11 @@ export default async function Landing() {
         </header>
 
         <div className="relative mx-auto max-w-5xl px-4 pb-10 pt-12 text-center sm:px-8 md:pt-20">
-          <h1 className="lp-title text-[clamp(2.3rem,6.2vw,4.5rem)] font-bold leading-[1.06] tracking-[-0.03em]">
+          <h1 className="lp-title text-[clamp(2.9rem,9vw,4.5rem)] font-bold leading-[1.04] tracking-[-0.03em]">
             <span className="block md:whitespace-nowrap">Never miss a court date</span>
             <span className="block text-accent md:whitespace-nowrap">or a filing deadline</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-white/80">
+          <p className="mx-auto mt-6 max-w-2xl text-[14px] leading-relaxed text-white/80 sm:text-[17px]">
             Hearings, filing deadlines and next dates for your whole chambers in one diary. Record what happened in court,
             fix the next date in one step, and let counsel and clients be reminded by email, SMS and WhatsApp.
           </p>
@@ -171,7 +172,7 @@ export default async function Landing() {
             <Link href={cta.href} className="rounded-full bg-accent px-7 py-3.5 text-base font-semibold text-primary shadow-[0_12px_30px_-12px_rgba(14,206,212,.8)] transition hover:-translate-y-0.5 hover:bg-accent-300">{cta.label}</Link>
             {!signedIn && <Link href="/login" className="rounded-full border border-white/35 px-7 py-3.5 text-base font-semibold text-white transition hover:bg-white/10">Sign in</Link>}
           </div>
-          <p className="mt-4 text-sm text-white/60">Create your firm, then invite colleagues with a join code.</p>
+          <p className="mt-4 text-[13px] text-white/60 sm:text-sm">Create your firm, then invite colleagues with a join code.</p>
         </div>
 
         {/* Screens */}
@@ -201,14 +202,14 @@ export default async function Landing() {
         <section aria-labelledby="local" className="py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-8">
             <h2 id="local" className="lp-title text-center text-2xl font-bold tracking-tight text-primary sm:text-3xl">Made for how Nigerian courts work</h2>
-            <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-5 lg:grid-cols-4">
               {LOCAL.map((l) => (
-                <li key={l.title} className="flex flex-col items-center rounded-2xl border border-primary-100 bg-white px-5 py-7 text-center shadow-[0_18px_40px_-24px_rgba(46,5,98,.45)]">
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary-50 text-primary">
-                    <Icon d={l.icon} className="h-6 w-6" />
+                <li key={l.title} className="flex flex-col items-center rounded-2xl border border-primary-100 bg-white px-3 py-5 text-center shadow-[0_18px_40px_-24px_rgba(46,5,98,.45)] sm:px-5 sm:py-7">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary-50 text-primary sm:h-12 sm:w-12 sm:rounded-2xl">
+                    <Icon d={l.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
                   </span>
-                  <p className="lp-title mt-4 text-lg text-ink">{l.title}</p>
-                  <p className="mt-1 text-muted">{l.body}</p>
+                  <p className="lp-title mt-3 text-[15px] leading-snug text-ink sm:mt-4 sm:text-lg">{l.title}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-muted sm:text-[15px] sm:leading-normal">{l.body}</p>
                 </li>
               ))}
             </ul>
