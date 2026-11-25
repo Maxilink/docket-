@@ -89,7 +89,7 @@ Suggested next steps
 Leave out a heading if the document has nothing for it. Keep the whole summary under about 350 words.
 Write dates as day month year (for example 14 March 2026). Keep suit numbers and section references exactly as written.`;
 
-type Block =
+export type Block =
   | { type: 'document'; source: { type: 'base64'; media_type: 'application/pdf'; data: string } }
   | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
   | { type: 'text'; text: string };
@@ -157,4 +157,74 @@ export async function summarise(block: Block, context: string): Promise<string> 
   const text = (body?.content ?? []).filter((c) => c.type === 'text' && c.text).map((c) => c.text).join('\n').trim();
   if (!text) throw new AiError('The summary came back empty. Try again.');
   return text;
+}
+
+/** Turns an Anthropic error response into a message for the user. */
+function apiError(status: number, msg: string, what: string): AiError {
+  if (status === 401) return new AiError('The Anthropic API key was rejected. Check ANTHROPIC_API_KEY in Vercel.');
+  if (status === 429) return new AiError('The AI is busy. Wait a minute and try again.');
+  if (status === 413 || /too large|too long|exceed|maximum/i.test(msg)) return new AiError(`The documents are too large to read in one go. Choose fewer or smaller documents for the ${what}.`);
+  if (/credit|billing|balance/i.test(msg)) return new AiError('The Anthropic account is out of credit. Top it up in the Claude Console.');
+  if (status === 529 || /overloaded/i.test(msg)) return new AiError('The AI is overloaded right now. Try again in a few minutes.');
+  return new AiError(`The ${what} failed: ${msg}`);
+}
+
+/**
+ * Streams a Claude reply, calling onText with each piece of text as it arrives.
+ * Returns the whole text and why it stopped (for example "max_tokens" if it ran out of room).
+ */
+export async function streamClaude(opts: {
+  system: string;
+  content: Block[];
+  maxTokens: number;
+  what: string;
+  onText: (t: string) => void;
+}): Promise<{ text: string; stop: string | null }> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new AiError('AI drafting isn\'t switched on yet. Add ANTHROPIC_API_KEY in Vercel.');
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      max_tokens: opts.maxTokens,
+      stream: true,
+      system: opts.system,
+      messages: [{ role: 'user', content: opts.content }],
+    }),
+    cache: 'no-store',
+  });
+  if (!res.ok || !res.body) {
+    const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+    throw apiError(res.status, body?.error?.message ?? `HTTP ${res.status}`, opts.what);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '';
+  let text = '';
+  let stop: string | null = null;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let i: number;
+    while ((i = buf.indexOf('\n\n')) >= 0) {
+      const chunk = buf.slice(0, i);
+      buf = buf.slice(i + 2);
+      const line = chunk.split('\n').find((l) => l.startsWith('data:'));
+      if (!line) continue;
+      let ev: { type?: string; delta?: { type?: string; text?: string; stop_reason?: string }; error?: { message?: string } };
+      try { ev = JSON.parse(line.slice(5).trim()); } catch { continue; }
+      if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta' && ev.delta.text) {
+        text += ev.delta.text;
+        opts.onText(ev.delta.text);
+      } else if (ev.type === 'message_delta' && ev.delta?.stop_reason) {
+        stop = ev.delta.stop_reason;
+      } else if (ev.type === 'error') {
+        throw apiError(500, ev.error?.message ?? 'stream error', opts.what);
+      }
+    }
+  }
+  if (!text.trim()) throw new AiError(`The ${opts.what} came back empty. Try again.`);
+  return { text, stop };
 }
