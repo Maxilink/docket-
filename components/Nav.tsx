@@ -16,7 +16,11 @@ const LINKS = [
   { href: '/team', label: 'Team', icon: 'M9 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a7 7 0 0 1 14 0v1M17 4a4 4 0 0 1 0 8M22 21v-1a6 6 0 0 0-4-5.6' },
 ];
 
-export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0 }: { appName?: string; firmName: string; userName: string; roleLabel: string; unread: number; waiting?: number }) {
+const BILLING = { href: '/billing', label: 'Billing', icon: 'M3 6h18v12H3zM3 10h18M7 15h3' };
+const OWNER = { href: '/owner', label: 'Owner', icon: 'M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z' };
+
+export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0, isAdmin = false, isOwner = false }: { appName?: string; firmName: string; userName: string; roleLabel: string; unread: number; waiting?: number; isAdmin?: boolean; isOwner?: boolean }) {
+  const links = [...LINKS, ...(isAdmin ? [BILLING] : []), ...(isOwner ? [OWNER] : [])];
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -88,7 +92,7 @@ export default function Nav({ firmName, userName, roleLabel, unread, waiting = 0
         </div>
 
         <div className="flex flex-col gap-1">
-          {LINKS.map((l) => {
+          {links.map((l) => {
             const on = path === l.href || path.startsWith(l.href + '/');
             const count = l.href === '/messages' ? unread : l.href === '/team' ? waiting : 0;
             const badge = count > 0 && !on;
