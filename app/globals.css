@@ -58,3 +58,16 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* AI drafts: court-document look for the Read view */
+.brief-doc { font-family: 'Times New Roman', Georgia, serif; font-size: 16px; line-height: 1.7; }
+.brief-doc h1 { margin: 1.25rem 0 1rem; text-align: center; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; }
+.brief-doc h2 { margin: 1.5rem 0 0.5rem; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.brief-doc h3 { margin: 1rem 0 0.5rem; font-weight: 700; }
+.brief-doc p { margin: 0 0 0.75rem; }
+.brief-doc ul { margin: 0 0 0.75rem; padding-left: 1.5rem; list-style: disc; }
+.brief-doc ol { margin: 0 0 0.75rem; padding-left: 1.5rem; list-style: decimal; }
+.brief-doc hr { margin: 1.5rem 0; border-color: #E7E1F0; }
+.brief-doc mark { border-radius: 4px; padding: 0 4px; }
+.brief-doc .gap-auth { background: #FBEAED; color: #A12D44; }
+.brief-doc .gap-check { background: #FDF4E6; color: #8A4B0E; }
