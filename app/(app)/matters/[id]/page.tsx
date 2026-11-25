@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
 export default async function MatterPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { supabase, profile, firm } = await requireMember();
-  const [{ data }, staff, { data: evData }, { data: docData, error: docErr }] = await Promise.all([
+  const [{ data }, staff, { data: evData }, { data: docData, error: docErr }, { data: briefData, error: briefErr }] = await Promise.all([
     supabase.from('matters').select('*').eq('id', params.id).maybeSingle(),
     getStaff(supabase),
     supabase.from('events').select(EVENT_SELECT).eq('matter_id', params.id).order('starts_at', { ascending: false }),
@@ -27,7 +27,10 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
       .select(DOC_COLUMNS)
       .eq('matter_id', params.id)
       .order('created_at', { ascending: false }),
+    supabase.from('briefs').select('id, title, kind, status, updated_at').eq('matter_id', params.id).order('updated_at', { ascending: false }),
   ]);
+  const briefs = (briefData ?? []) as { id: string; title: string; kind: string; status: string; updated_at: string }[];
+  const canDraft = ['admin', 'partner', 'associate'].includes(profile.role);
   if (!data) notFound();
   // Private links to open each file, valid for an hour.
   let docs = (docData ?? []) as Doc[];
@@ -145,6 +148,35 @@ export default async function MatterPage(props: { params: Promise<{ id: string }
             .map((x) => ({ id: x.id, label: `${fmtDate(new Date(x.starts_at))}${x.purpose ? ` · ${x.purpose}` : ''}` }))}
         />
       )}
+
+      <section className="card" aria-labelledby="briefs-h">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+          <div>
+            <h2 id="briefs-h" className="font-display text-lg font-bold">Briefs and written addresses</h2>
+            <p className="text-sm text-muted">AI first drafts from this file, using only the authorities you give.</p>
+          </div>
+          {canDraft && !briefErr && <Link href={`/briefs/new?matter=${m.id}`} className="btn-primary">Draft a brief</Link>}
+        </div>
+        {briefErr ? (
+          <p className="px-5 py-4 text-sm text-warn">Brief drafting isn&apos;t switched on yet. Run <span className="font-mono">008_briefs.sql</span> in Supabase, then reload.</p>
+        ) : briefs.length === 0 ? (
+          <p className="px-5 py-4 text-sm text-muted">No drafts yet.{canDraft ? ' Upload the key documents above first for a better draft.' : ''}</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {briefs.map((b) => (
+              <li key={b.id}>
+                <Link href={`/briefs/${b.id}`} className="row-hover flex flex-wrap items-center justify-between gap-2 px-5 py-3">
+                  <span className="min-w-0">
+                    <span className="block font-semibold">{b.title}</span>
+                    <span className="block text-sm text-muted">{b.kind}, changed {fmtDate(new Date(b.updated_at))}</span>
+                  </span>
+                  {b.status !== 'draft' && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${b.status === 'failed' ? 'bg-hearing-soft text-hearing' : 'bg-primary-100 text-primary'}`}>{b.status === 'failed' ? 'Failed' : 'Writing'}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="card">
         <div className="border-b border-line px-5 py-4">
