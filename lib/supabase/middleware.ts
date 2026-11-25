@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // '/' is the public landing page (exact match only; see isPublic below).
-const PUBLIC_PATHS = ['/login', '/auth', '/api/cron'];
+const PUBLIC_PATHS = ['/login', '/auth', '/api/cron', '/api/paystack'];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
