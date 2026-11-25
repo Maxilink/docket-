@@ -185,7 +185,7 @@ export const COURTS: Court[] = [
   },
 ];
 
-export const SOURCE = 'Timelines and processes: from Magistrates Court to Supreme Court, prepared by Ogheneruno Isiavwe';
+export const SOURCE = 'Timelines and processes: from Magistrates Court to Supreme Court';
 
 export function findTimeline(id: string | null | undefined): { court: Court; t: Timeline } | null {
   if (!id) return null;
